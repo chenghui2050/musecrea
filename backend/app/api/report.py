@@ -1,0 +1,733 @@
+import os
+import re
+import json
+import markdown as md
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import HTMLResponse, FileResponse
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.models import User, Evaluation, Report, Product
+from app.core.security import get_current_user, decode_token
+from app.config import settings
+from jinja2 import Template
+from datetime import datetime
+from fpdf import FPDF
+
+router = APIRouter(prefix="/report", tags=["报告生成"])
+
+
+def get_user_from_token(token: str, db: Session) -> User:
+    """Verify a JWT token and return the corresponding user."""
+    payload = decode_token(token)
+    if payload is None:
+        return None
+    username = payload.get("sub")
+    if not username:
+        return None
+    return db.query(User).filter(User.username == username, User.is_active == True).first()
+
+REPORT_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MuseCrea 创意评价报告 - {{ report_date }}</title>
+<style>
+  @font-face {
+    font-family: 'ChineseFont';
+    src: url('file:///C:/Windows/Fonts/simhei.ttf');
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'ChineseFont', 'Microsoft YaHei', 'SimHei', 'PingFang SC', sans-serif; background: #f5f7fa; color: #2c3e50; line-height: 1.6; }
+  .container { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+  .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 50px 40px; border-radius: 16px; margin-bottom: 30px; }
+  .header h1 { font-size: 28px; margin-bottom: 8px; }
+  .header .subtitle { font-size: 14px; opacity: 0.85; }
+  .header .meta { display: flex; gap: 30px; margin-top: 20px; font-size: 13px; opacity: 0.9; }
+  .card { background: white; border-radius: 12px; padding: 30px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .card h2 { font-size: 20px; color: #2c3e50; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #667eea; }
+  .product-section { margin-bottom: 40px; }
+  .product-header { display: flex; align-items: center; gap: 20px; margin-bottom: 24px; }
+  .product-image { width: 120px; height: 120px; object-fit: cover; border-radius: 12px; border: 2px solid #eee; }
+  .score-badge { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 8px 20px; border-radius: 20px; font-size: 18px; font-weight: bold; }
+  .radar-container { display: flex; justify-content: center; margin: 30px 0; }
+  .dimension-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px; }
+  .dimension-card { background: #f8f9ff; border-radius: 10px; padding: 18px; border-left: 4px solid #667eea; }
+  .dimension-card h3 { font-size: 15px; color: #667eea; margin-bottom: 8px; }
+  .dimension-card .score { font-size: 24px; font-weight: bold; color: #2c3e50; }
+  .dimension-card .rank-badge { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 12px; margin-left: 8px; }
+  .rank-1 { background: #d4edda; color: #155724; }
+  .rank-2 { background: #cce5ff; color: #004085; }
+  .rank-3 { background: #fff3cd; color: #856404; }
+  .rank-4 { background: #f8d7da; color: #721c24; }
+  .rank-5 { background: #f5c6cb; color: #721c24; }
+  .analysis-section { margin-top: 24px; }
+  .analysis-section h3 { font-size: 16px; color: #495057; margin-bottom: 12px; }
+  .analysis-content { font-size: 14px; line-height: 1.8; color: #555; white-space: pre-wrap; }
+  .suggestions { background: #f0f7ff; border-radius: 10px; padding: 20px; margin-top: 16px; }
+  .suggestions h3 { color: #2d6ca2; margin-bottom: 12px; }
+  .footer { text-align: center; padding: 30px; color: #999; font-size: 12px; }
+  .bar-chart { margin: 20px 0; }
+  .bar-item { display: flex; align-items: center; margin-bottom: 10px; }
+  .bar-label { width: 80px; font-size: 13px; color: #555; text-align: right; padding-right: 12px; }
+  .bar-track { flex: 1; height: 24px; background: #e9ecef; border-radius: 12px; overflow: hidden; position: relative; }
+  .bar-fill { height: 100%; border-radius: 12px; display: flex; align-items: center; padding-left: 10px; font-size: 12px; color: white; font-weight: bold; transition: width 0.6s ease; }
+  .bar-value { margin-left: 10px; font-size: 13px; color: #666; width: 50px; }
+  .md-content { font-size: 14px; line-height: 1.9; color: #444; }
+  .md-content h1, .md-content h2 { font-size: 17px; font-weight: 700; color: #667eea; margin: 20px 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid #e0e4f0; }
+  .md-content h3, .md-content h4 { font-size: 15px; font-weight: 600; color: #2c3e50; margin: 16px 0 8px 0; }
+  .md-content p { margin: 8px 0; }
+  .md-content strong { color: #2c3e50; font-weight: 700; }
+  .md-content ul, .md-content ol { margin: 8px 0 8px 20px; padding: 0; }
+  .md-content li { margin: 4px 0; line-height: 1.8; }
+  .md-content hr { border: none; border-top: 1px solid #e4e7ed; margin: 16px 0; }
+  .md-content table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; line-height: 1.6; }
+  .md-content table th { background: #f0f2ff; color: #2c3e50; font-weight: 600; padding: 10px 14px; text-align: left; border: 1px solid #d0d5dd; }
+  .md-content table td { padding: 9px 14px; border: 1px solid #d0d5dd; color: #444; }
+  .md-content table tr:nth-child(even) { background: #fafbff; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>MuseCrea 文创产品创意评价报告</h1>
+    <div class="subtitle">基于多维度量化分析与AI智能洞察</div>
+    <div class="meta">
+      <span>报告日期：{{ report_date }}</span>
+      <span>评价产品数：{{ products|length }}</span>
+      <span>生成方式：MuseCrea AI 评价系统</span>
+    </div>
+  </div>
+
+  {% for product in products %}
+  <div class="card product-section">
+    <div class="product-header">
+      {% if product.image_url %}
+      <img class="product-image" src="{{ product.image_url }}" alt="{{ product.product_id }}">
+      {% endif %}
+      <div>
+        <h2 style="border:none;padding:0;margin:0;">产品 {{ product.product_id }}</h2>
+        {% if product.product_name %}<p style="color:#666;margin-top:4px;">{{ product.product_name }}</p>{% endif %}
+        <div style="margin-top:10px;">
+          <span class="score-badge">创意值 {{ "%.4f"|format(product.creativity_score) }}</span>
+          <span style="margin-left:12px;color:#888;font-size:13px;">样本数：{{ product.sample_count }}</span>
+        </div>
+      </div>
+    </div>
+
+    <h2>五维度得分</h2>
+    <div class="bar-chart">
+      {% for dim_name, dim_info in product.dimensions_ranked %}
+      <div class="bar-item">
+        <span class="bar-label">{{ dim_name }}</span>
+        <div class="bar-track">
+          <div class="bar-fill" style="width: {{ (dim_info.score / max_score * 100)|round(1) }}%; background: {{ dim_info.color }};">
+            {{ "%.2f"|format(dim_info.score) }}
+          </div>
+        </div>
+        <span class="bar-value">
+          <span class="rank-badge rank-{{ dim_info.rank }}">第{{ dim_info.rank }}名</span>
+        </span>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if product.llm_analysis %}
+    <div class="analysis-section">
+      <h2>🤖 AI 消费者洞察分析</h2>
+      <div class="analysis-content md-content">{{ product.llm_analysis_html|safe }}</div>
+    </div>
+    {% endif %}
+
+    {% if product.improvement_suggestions %}
+    <div class="suggestions">
+      <h3>💡 综合改进建议</h3>
+      <div class="analysis-content md-content">{{ product.improvement_suggestions_html|safe }}</div>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+
+  <div class="footer">
+    <p>本报告由 MuseCrea 文创产品创意评价系统自动生成 | {{ report_date }}</p>
+    <p>算法：Random Forest 回归模型 | AI分析：通义千问大语言模型</p>
+  </div>
+</div>
+</body>
+</html>
+"""
+
+
+def _get_current_user_with_token(request: Request, db: Session = Depends(get_db)):
+    """Get current user from either Authorization header or query parameter token."""
+    # Try Authorization header first
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+    else:
+        # Fall back to query parameter
+        token = request.query_params.get("token")
+
+    if not token:
+        raise HTTPException(status_code=401, detail="未授权")
+
+    user = get_user_from_token(token, db)
+    if not user:
+        raise HTTPException(status_code=401, detail="无效的认证凭据")
+    return user
+
+
+@router.get("/generate/{evaluation_id}")
+def generate_report(
+    evaluation_id: int,
+    current_user: User = Depends(_get_current_user_with_token),
+    db: Session = Depends(get_db),
+):
+    """生成单个评价的可视化报告"""
+    e = db.query(Evaluation).filter(
+        Evaluation.id == evaluation_id,
+        Evaluation.user_id == current_user.id,
+    ).first()
+    if not e:
+        raise HTTPException(status_code=404, detail="评价记录不存在")
+
+    html = _render_report([e], db)
+    return HTMLResponse(content=html)
+
+
+@router.get("/generate/batch")
+def generate_batch_report(
+    evaluation_ids: str,
+    current_user: User = Depends(_get_current_user_with_token),
+    db: Session = Depends(get_db),
+):
+    """批量生成报告（逗号分隔的评价ID）"""
+    ids = [int(x.strip()) for x in evaluation_ids.split(',')]
+    evaluations = db.query(Evaluation).filter(
+        Evaluation.id.in_(ids),
+        Evaluation.user_id == current_user.id,
+    ).all()
+    if not evaluations:
+        raise HTTPException(status_code=404, detail="未找到评价记录")
+
+    html = _render_report(evaluations, db)
+    return HTMLResponse(content=html)
+
+
+@router.get("/download/{evaluation_id}")
+def download_report(
+    evaluation_id: int,
+    current_user: User = Depends(_get_current_user_with_token),
+    db: Session = Depends(get_db),
+):
+    """下载报告为PDF文件（使用fpdf2生成，完美支持中文）"""
+    e = db.query(Evaluation).filter(
+        Evaluation.id == evaluation_id,
+        Evaluation.user_id == current_user.id,
+    ).first()
+    if not e:
+        raise HTTPException(status_code=404, detail="评价记录不存在")
+
+    # Build product data for PDF
+    product = e.product
+    dim_labels_zh = {
+        'Novelty': '新颖度', 'Usefulness': '有用性', 'Affect': '情感性',
+        'Aesthetics': '设计美学', 'Cultural Values': '文化价值',
+    }
+    dim_colors_rgb = {
+        'Novelty': (102, 126, 234), 'Usefulness': (118, 75, 162), 'Affect': (240, 147, 251),
+        'Aesthetics': (79, 172, 254), 'Cultural Values': (67, 233, 123),
+    }
+    dim_scores = {
+        'Novelty': e.novelty_score or 0,
+        'Usefulness': e.usefulness_score or 0,
+        'Affect': e.affect_score or 0,
+        'Aesthetics': e.aesthetics_score or 0,
+        'Cultural Values': e.cultural_value_score or 0,
+    }
+    sorted_dims = sorted(dim_scores.items(), key=lambda x: x[1], reverse=True)
+    dimensions = []
+    for rank, (dim, score) in enumerate(sorted_dims, 1):
+        dimensions.append({
+            'name': dim_labels_zh.get(dim, dim),
+            'score': score,
+            'rank': rank,
+            'color': dim_colors_rgb.get(dim, (150, 150, 150)),
+        })
+
+    # Resolve product image to local file path
+    image_path = None
+    if product and product.image_url:
+        # image_url is like "/uploads/images/P3.png"
+        rel = product.image_url.lstrip('/')
+        candidate = os.path.join(settings.UPLOAD_DIR, rel.replace('uploads/', '', 1) if rel.startswith('uploads/') else rel)
+        # Actually the path is: UPLOAD_DIR/images/filename
+        img_filename = os.path.basename(rel)
+        candidate = os.path.join(settings.UPLOAD_DIR, 'images', img_filename)
+        if os.path.isfile(candidate):
+            image_path = candidate
+
+    product_data = {
+        'product_id': product.product_id if product else 'N/A',
+        'product_name': product.name if product else '',
+        'image_path': image_path,
+        'creativity_score': e.creativity_score,
+        'sample_count': e.sample_count,
+        'dimensions': dimensions,
+        'llm_analysis': e.llm_analysis or '',
+        'improvement_suggestions': e.improvement_suggestions or '',
+    }
+
+    # Generate PDF
+    report_dir = os.path.join(settings.UPLOAD_DIR, "reports")
+    os.makedirs(report_dir, exist_ok=True)
+    filename = f"musecrea_report_{evaluation_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
+    filepath = os.path.join(report_dir, filename)
+
+    pdf = _generate_pdf([product_data])
+    pdf.output(filepath)
+
+    # Save report record
+    html_snippet = _render_report([e], db)
+    report = Report(
+        evaluation_id=evaluation_id,
+        report_type="pdf",
+        report_data=html_snippet[:1000],
+        file_path=filepath,
+    )
+    db.add(report)
+    db.commit()
+
+    return FileResponse(filepath, filename=filename, media_type="application/pdf")
+
+
+# ──────────────────────────────────────────
+# PDF generation helpers (fpdf2)
+# ──────────────────────────────────────────
+
+FONT_PATH = 'C:/Windows/Fonts/simhei.ttf'
+
+class _ReportPDF(FPDF):
+    def __init__(self):
+        super().__init__()
+        self.add_font('SimHei', '', FONT_PATH)
+        self.set_auto_page_break(auto=True, margin=20)
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_font('SimHei', size=8)
+        self.set_text_color(150, 150, 150)
+        self.cell(0, 10, f'MuseCrea 文创产品创意评价系统  |  第 {self.page_no()}/{{nb}} 页', align='C')
+
+
+def _parse_md_blocks(text: str) -> list:
+    """Parse markdown text into a list of structured blocks for PDF rendering.
+
+    Each block is a dict with keys:
+      type: 'h2' | 'h3' | 'h4' | 'paragraph' | 'bullet' | 'hr'
+      text: str (plain text, markdown bold markers stripped)
+      bold_segments: list of (text, is_bold) for inline bold rendering
+    """
+    if not text:
+        return []
+
+    blocks = []
+    lines = text.strip().split('\n')
+    paragraph_buf = []
+
+    def flush_paragraph():
+        if paragraph_buf:
+            full = ' '.join(paragraph_buf)
+            paragraph_buf.clear()
+            bold_segs = _parse_bold_segments(full)
+            blocks.append({'type': 'paragraph', 'text': full, 'bold_segments': bold_segs})
+
+    for raw_line in lines:
+        line = raw_line.rstrip()
+
+        # Horizontal rule
+        if re.match(r'^-{3,}$', line.strip()) or re.match(r'^\*{3,}$', line.strip()):
+            flush_paragraph()
+            blocks.append({'type': 'hr', 'text': '', 'bold_segments': []})
+            continue
+
+        # Headers
+        m = re.match(r'^(#{1,4})\s+(.*)', line)
+        if m:
+            flush_paragraph()
+            level = len(m.group(1))
+            header_text = m.group(2).strip()
+            htype = f'h{min(level, 4)}'
+            blocks.append({'type': htype, 'text': header_text, 'bold_segments': _parse_bold_segments(header_text)})
+            continue
+
+        # Bullet list items (handle -, *, and numbered lists)
+        m = re.match(r'^[\s]*[-*]\s+(.*)', line)
+        if m:
+            flush_paragraph()
+            item_text = m.group(1).strip()
+            blocks.append({'type': 'bullet', 'text': item_text, 'bold_segments': _parse_bold_segments(item_text)})
+            continue
+
+        m = re.match(r'^[\s]*(\d+)[.)]\s+(.*)', line)
+        if m:
+            flush_paragraph()
+            item_text = m.group(2).strip()
+            blocks.append({'type': 'bullet', 'text': f'{m.group(1)}. {item_text}', 'bold_segments': _parse_bold_segments(item_text)})
+            continue
+
+        # Checkmark lines (treat as bullets)
+        if line.strip().startswith('✅'):
+            flush_paragraph()
+            blocks.append({'type': 'bullet', 'text': line.strip(), 'bold_segments': _parse_bold_segments(line.strip())})
+            continue
+
+        # Empty line → flush paragraph
+        if not line.strip():
+            flush_paragraph()
+            continue
+
+        # Normal text → accumulate into paragraph
+        paragraph_buf.append(line.strip())
+
+    flush_paragraph()
+    return blocks
+
+
+def _parse_bold_segments(text: str) -> list:
+    """Split text into segments of (text, is_bold) based on **bold** markers."""
+    segments = []
+    parts = re.split(r'(\*\*.*?\*\*)', text)
+    for part in parts:
+        if not part:
+            continue
+        if part.startswith('**') and part.endswith('**'):
+            segments.append((part[2:-2], True))
+        else:
+            segments.append((part, False))
+    return segments if segments else [(text, False)]
+
+
+def _render_md_blocks(pdf: FPDF, text: str):
+    """Render parsed markdown blocks into the PDF."""
+    blocks = _parse_md_blocks(text)
+    for block in blocks:
+        btype = block['type']
+
+        if btype == 'hr':
+            pdf.set_draw_color(200, 200, 210)
+            pdf.set_line_width(0.3)
+            y = pdf.get_y() + 3
+            pdf.line(pdf.l_margin, y, pdf.w - pdf.r_margin, y)
+            pdf.set_y(y + 5)
+
+        elif btype == 'h2':
+            pdf.ln(4)
+            pdf.set_font('SimHei', size=13)
+            pdf.set_text_color(102, 126, 234)
+            pdf.multi_cell(0, 8, block['text'])
+            pdf.set_draw_color(102, 126, 234)
+            pdf.set_line_width(0.4)
+            pdf.line(pdf.l_margin, pdf.get_y(), pdf.l_margin + 60, pdf.get_y())
+            pdf.ln(3)
+
+        elif btype == 'h3':
+            pdf.ln(3)
+            pdf.set_font('SimHei', size=12)
+            pdf.set_text_color(44, 62, 80)
+            _write_bold_text(pdf, block['bold_segments'], size=12)
+            pdf.ln(2)
+
+        elif btype == 'h4':
+            pdf.ln(2)
+            pdf.set_font('SimHei', size=11)
+            pdf.set_text_color(60, 60, 80)
+            _write_bold_text(pdf, block['bold_segments'], size=11)
+            pdf.ln(2)
+
+        elif btype == 'bullet':
+            pdf.set_font('SimHei', size=10)
+            pdf.set_text_color(60, 60, 60)
+            x_start = pdf.l_margin + 4
+            bullet_char = '•'
+            pdf.set_x(x_start)
+            pdf.cell(6, 6, bullet_char)
+            pdf.set_x(x_start + 6)
+            _write_bold_text(pdf, block['bold_segments'], size=10, left_margin=x_start + 6)
+            pdf.ln(1)
+
+        elif btype == 'paragraph':
+            pdf.set_font('SimHei', size=10)
+            pdf.set_text_color(60, 60, 60)
+            _write_bold_text(pdf, block['bold_segments'], size=10)
+            pdf.ln(3)
+
+
+def _write_bold_text(pdf: FPDF, segments: list, size: int = 10, left_margin: float = None):
+    """Write a line of text with inline bold support using multi_cell."""
+    if left_margin is None:
+        left_margin = pdf.l_margin
+
+    # Build a single string with bold markers for fpdf2 write_html-like rendering
+    # Since fpdf2 doesn't support inline bold in multi_cell easily, we render the whole
+    # block as multi_cell and use a simple approach: write each segment
+    available_w = pdf.w - pdf.r_margin - left_margin
+
+    # Use write() for inline rendering
+    x_start = left_margin
+    for text, is_bold in segments:
+        if is_bold:
+            pdf.set_font('SimHei', size=size)
+            # Simulate bold by slightly darker color
+            pdf.set_text_color(30, 30, 40)
+        else:
+            pdf.set_font('SimHei', size=size)
+            pdf.set_text_color(60, 60, 60)
+        pdf.write(6, text)
+
+    pdf.ln(6)
+
+
+def _generate_pdf(products: list) -> FPDF:
+    """Generate a complete PDF report for the given products."""
+    pdf = _ReportPDF()
+    pdf.alias_nb_pages()
+    pdf.add_page()
+
+    # ── Title banner ──
+    # Gradient-like header using filled rectangles
+    pdf.set_fill_color(102, 126, 234)
+    pdf.rect(0, 0, pdf.w, 50, 'F')
+    # Lighter strip at bottom for gradient effect
+    pdf.set_fill_color(118, 75, 162)
+    pdf.rect(0, 40, pdf.w, 15, 'F')
+
+    pdf.set_font('SimHei', size=22)
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_y(10)
+    pdf.cell(0, 12, 'MuseCrea 文创产品创意评价报告', align='C')
+
+    pdf.set_font('SimHei', size=10)
+    pdf.set_text_color(255, 255, 255)
+    pdf.set_y(25)
+    pdf.cell(0, 7, '基于多维度量化分析与AI智能洞察', align='C')
+
+    pdf.set_font('SimHei', size=8)
+    pdf.set_text_color(230, 230, 255)
+    pdf.set_y(38)
+    report_date = datetime.now().strftime('%Y年%m月%d日')
+    pdf.cell(0, 6, f'报告日期：{report_date}  |  评价产品数：{len(products)}  |  生成方式：MuseCrea AI 评价系统', align='C')
+
+    pdf.set_y(60)
+
+    # ── Product sections ──
+    for prod in products:
+        # Check if we need a new page (need at least 80mm of space)
+        if pdf.get_y() > pdf.h - 100:
+            pdf.add_page()
+
+        # Product header
+        pdf.set_font('SimHei', size=16)
+        pdf.set_text_color(44, 62, 80)
+        title = f"产品 {prod['product_id']}"
+        if prod.get('product_name'):
+            title += f" - {prod['product_name']}"
+        pdf.cell(0, 12, title)
+        pdf.ln(10)
+
+        # Product image (if available)
+        if prod.get('image_path') and os.path.isfile(prod['image_path']):
+            try:
+                img_x = pdf.l_margin
+                img_y = pdf.get_y()
+                pdf.image(prod['image_path'], x=img_x, y=img_y, w=35, h=35)
+                # Score badge next to image
+                pdf.set_xy(img_x + 40, img_y + 2)
+                pdf.set_font('SimHei', size=11)
+                pdf.set_fill_color(102, 126, 234)
+                pdf.set_text_color(255, 255, 255)
+                pdf.cell(45, 8, f'  创意值 {prod["creativity_score"]:.4f}', fill=True)
+                pdf.set_xy(img_x + 40, img_y + 14)
+                pdf.set_font('SimHei', size=9)
+                pdf.set_text_color(120, 120, 120)
+                pdf.cell(0, 6, f'样本数：{prod["sample_count"]}')
+                pdf.set_y(img_y + 40)
+            except Exception:
+                pdf.set_y(pdf.get_y() + 5)
+                pdf.set_font('SimHei', size=11)
+                pdf.set_fill_color(102, 126, 234)
+                pdf.set_text_color(255, 255, 255)
+                pdf.cell(50, 8, f'  创意值 {prod["creativity_score"]:.4f}', fill=True)
+                pdf.set_text_color(120, 120, 120)
+                pdf.set_font('SimHei', size=9)
+                pdf.cell(0, 8, f'  样本数：{prod["sample_count"]}')
+                pdf.ln(12)
+        else:
+            pdf.set_font('SimHei', size=11)
+            pdf.set_fill_color(102, 126, 234)
+            pdf.set_text_color(255, 255, 255)
+            pdf.cell(50, 8, f'  创意值 {prod["creativity_score"]:.4f}', fill=True)
+            pdf.set_text_color(120, 120, 120)
+            pdf.set_font('SimHei', size=9)
+            pdf.cell(0, 8, f'  样本数：{prod["sample_count"]}')
+            pdf.ln(12)
+
+        pdf.ln(4)
+
+        # ── Dimension bar chart ──
+        pdf.set_font('SimHei', size=14)
+        pdf.set_text_color(102, 126, 234)
+        pdf.cell(0, 10, '五维度得分')
+        pdf.ln(10)
+        pdf.set_draw_color(102, 126, 234)
+        pdf.set_line_width(0.4)
+        pdf.line(pdf.l_margin, pdf.get_y(), pdf.l_margin + 60, pdf.get_y())
+        pdf.ln(5)
+
+        max_score = max((d['score'] for d in prod['dimensions']), default=1) or 1
+        bar_max_w = 110
+        for dim in prod['dimensions']:
+            pdf.set_font('SimHei', size=10)
+            pdf.set_text_color(80, 80, 80)
+            pdf.cell(25, 7, dim['name'])
+
+            # Bar background
+            x_bar = pdf.get_x()
+            y_bar = pdf.get_y() + 1
+            bar_h = 5
+            pdf.set_fill_color(230, 232, 240)
+            pdf.rect(x_bar, y_bar, bar_max_w, bar_h, 'F')
+
+            # Bar fill
+            fill_w = max((dim['score'] / max_score) * bar_max_w, 2)
+            r, g, b = dim['color']
+            pdf.set_fill_color(r, g, b)
+            pdf.rect(x_bar, y_bar, fill_w, bar_h, 'F')
+
+            # Score text
+            pdf.set_x(x_bar + bar_max_w + 3)
+            pdf.set_text_color(60, 60, 60)
+            pdf.set_font('SimHei', size=10)
+            pdf.cell(15, 7, f'{dim["score"]:.2f}')
+
+            # Rank badge
+            pdf.set_font('SimHei', size=8)
+            pdf.set_text_color(120, 120, 130)
+            pdf.cell(0, 7, f'第{dim["rank"]}名')
+            pdf.ln(8)
+
+        pdf.ln(6)
+
+        # ── AI Analysis ──
+        if prod.get('llm_analysis'):
+            if pdf.get_y() > pdf.h - 60:
+                pdf.add_page()
+            pdf.set_font('SimHei', size=14)
+            pdf.set_text_color(102, 126, 234)
+            pdf.cell(0, 10, 'AI 消费者洞察分析')
+            pdf.ln(10)
+            pdf.set_draw_color(102, 126, 234)
+            pdf.set_line_width(0.4)
+            pdf.line(pdf.l_margin, pdf.get_y(), pdf.l_margin + 60, pdf.get_y())
+            pdf.ln(5)
+
+            _render_md_blocks(pdf, prod['llm_analysis'])
+            pdf.ln(4)
+
+        # ── Improvement Suggestions ──
+        if prod.get('improvement_suggestions'):
+            if pdf.get_y() > pdf.h - 60:
+                pdf.add_page()
+
+            # Light background box
+            box_y = pdf.get_y()
+            pdf.set_fill_color(240, 247, 255)
+
+            pdf.set_font('SimHei', size=13)
+            pdf.set_text_color(45, 108, 162)
+            pdf.cell(0, 9, '综合改进建议')
+            pdf.ln(10)
+
+            _render_md_blocks(pdf, prod['improvement_suggestions'])
+
+            # Draw box background behind the section
+            box_h = pdf.get_y() - box_y
+            # We can't easily draw behind already-rendered content, so skip the background box
+            pdf.ln(6)
+
+        # Separator between products
+        if len(products) > 1:
+            pdf.set_draw_color(200, 200, 210)
+            pdf.set_line_width(0.5)
+            y_sep = pdf.get_y()
+            pdf.line(pdf.l_margin, y_sep, pdf.w - pdf.r_margin, y_sep)
+            pdf.ln(10)
+
+    # ── Footer text ──
+    pdf.ln(10)
+    pdf.set_font('SimHei', size=8)
+    pdf.set_text_color(150, 150, 150)
+    pdf.cell(0, 5, '本报告由 MuseCrea 文创产品创意评价系统自动生成', align='C')
+    pdf.ln(5)
+    pdf.cell(0, 5, '算法：Random Forest 回归模型  |  AI分析：通义千问大语言模型', align='C')
+
+    return pdf
+
+
+def _render_report(evaluations, db):
+    """渲染报告HTML"""
+    products = []
+    max_score = 1  # 防止除零
+
+    dim_labels_zh = {
+        'Novelty': '新颖度', 'Usefulness': '有用性', 'Affect': '情感性',
+        'Aesthetics': '设计美学', 'Cultural Values': '文化价值',
+    }
+    dim_colors = {
+        'Novelty': '#667eea', 'Usefulness': '#764ba2', 'Affect': '#f093fb',
+        'Aesthetics': '#4facfe', 'Cultural Values': '#43e97b',
+    }
+
+    for e in evaluations:
+        product = e.product
+        dim_scores = {
+            'Novelty': e.novelty_score or 0,
+            'Usefulness': e.usefulness_score or 0,
+            'Affect': e.affect_score or 0,
+            'Aesthetics': e.aesthetics_score or 0,
+            'Cultural Values': e.cultural_value_score or 0,
+        }
+        if dim_scores:
+            local_max = max(dim_scores.values())
+            if local_max > max_score:
+                max_score = local_max
+
+        sorted_dims = sorted(dim_scores.items(), key=lambda x: x[1], reverse=True)
+        dimensions_ranked = []
+        for rank, (dim, score) in enumerate(sorted_dims, 1):
+            dimensions_ranked.append((dim_labels_zh.get(dim, dim), {
+                'score': score,
+                'rank': rank,
+                'color': dim_colors.get(dim, '#999'),
+            }))
+
+        products.append({
+            'product_id': product.product_id if product else 'N/A',
+            'product_name': product.name if product else '',
+            'image_url': product.image_url if product else '',
+            'creativity_score': e.creativity_score,
+            'sample_count': e.sample_count,
+            'dimensions_ranked': dimensions_ranked,
+            'llm_analysis': e.llm_analysis or '',
+            'improvement_suggestions': e.improvement_suggestions or '',
+            'llm_analysis_html': md.markdown(e.llm_analysis or '', extensions=['tables', 'fenced_code']),
+            'improvement_suggestions_html': md.markdown(e.improvement_suggestions or '', extensions=['tables', 'fenced_code']),
+        })
+
+    template = Template(REPORT_TEMPLATE)
+    return template.render(
+        products=products,
+        max_score=max_score,
+        report_date=datetime.now().strftime('%Y年%m月%d日'),
+    )

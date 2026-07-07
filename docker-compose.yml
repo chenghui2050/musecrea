@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./data:/app/data
+    environment:
+      - DATABASE_URL=sqlite:///./data/musecrea.db
+      - DASHSCOPE_API_KEY=sk-c2327ea7be9a41e5ac3ce59d55ca674f
+      - SECRET_KEY=musecrea-production-secret-change-this
+      - DEBUG=false
+    restart: unless-stopped
