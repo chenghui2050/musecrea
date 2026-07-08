@@ -232,7 +232,7 @@ def _get_current_user_with_token(request: Request, db: Session = Depends(get_db)
 @router.get("/generate/batch")
 def generate_batch_report(
     evaluation_ids: str,
-    lang: str = Query(default='zh'),
+    lang: str = Query(default=None),
     current_user: User = Depends(_get_current_user_with_token),
     db: Session = Depends(get_db),
 ):
@@ -243,16 +243,18 @@ def generate_batch_report(
         Evaluation.user_id == current_user.id,
     ).all()
     if not evaluations:
-        raise HTTPException(status_code=404, detail=msg("report.batch_not_found", lang))
+        raise HTTPException(status_code=404, detail=msg("report.batch_not_found", lang or 'zh'))
 
-    html = _render_report(evaluations, db, lang=lang)
+    # 使用数据集语言作为报告语言，lang 查询参数作为手动覆盖
+    report_lang = lang or (evaluations[0].data_language if evaluations else 'zh') or 'zh'
+    html = _render_report(evaluations, db, lang=report_lang)
     return HTMLResponse(content=html)
 
 
 @router.get("/generate/{evaluation_id}")
 def generate_report(
     evaluation_id: int,
-    lang: str = Query(default='zh'),
+    lang: str = Query(default=None),
     current_user: User = Depends(_get_current_user_with_token),
     db: Session = Depends(get_db),
 ):
@@ -262,16 +264,17 @@ def generate_report(
         Evaluation.user_id == current_user.id,
     ).first()
     if not e:
-        raise HTTPException(status_code=404, detail=msg("report.not_found", lang))
+        raise HTTPException(status_code=404, detail=msg("report.not_found", lang or 'zh'))
 
-    html = _render_report([e], db, lang=lang)
+    report_lang = lang or e.data_language or 'zh'
+    html = _render_report([e], db, lang=report_lang)
     return HTMLResponse(content=html)
 
 
 @router.get("/download/{evaluation_id}")
 def download_report(
     evaluation_id: int,
-    lang: str = Query(default='zh'),
+    lang: str = Query(default=None),
     current_user: User = Depends(_get_current_user_with_token),
     db: Session = Depends(get_db),
 ):
@@ -281,7 +284,10 @@ def download_report(
         Evaluation.user_id == current_user.id,
     ).first()
     if not e:
-        raise HTTPException(status_code=404, detail=msg("report.not_found", lang))
+        raise HTTPException(status_code=404, detail=msg("report.not_found", lang or 'zh'))
+
+    # 使用数据集语言作为报告语言
+    lang = lang or e.data_language or 'zh'
 
     # Build product data for PDF
     tr = REPORT_I18N.get(lang, REPORT_I18N['zh'])

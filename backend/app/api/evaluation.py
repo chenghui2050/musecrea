@@ -4,7 +4,8 @@ from app.database import get_db
 from app.models import User, Product, Evaluation
 from app.schemas import EvaluationRequest, EvaluationResponse, EvaluationResult
 from app.core.security import get_current_user
-from app.services.creativity import calculate_creativity_scores, extract_comments
+from app.services.creativity import calculate_creativity_scores, extract_comments, detect_data_language
+from app.services.creativity import DIMENSION_LABELS_ZH, DIMENSION_LABELS_EN
 from app.services.llm_service import analyze_comments_batch
 from app.services.billing import deduct_credits, estimate_cost
 from app.core.i18n import msg, get_request_lang
@@ -53,11 +54,17 @@ def run_evaluation(
     scores = calculate_creativity_scores(df, product_ids)
     comments = extract_comments(df, product_ids)
 
-    # LLM分析
+    # 检测数据集语言（基于评论内容），用于 LLM 分析和报告输出
+    data_lang = detect_data_language(comments) if comments else lang
+
+    # LLM分析 — 使用数据语言而非界面语言
     llm_results = {}
     if req.run_llm_analysis and comments:
         dim_scores = {pid: s['dimension_scores'] for pid, s in scores.items()}
-        llm_results = analyze_comments_batch(comments, dim_scores, lang)
+        llm_results = analyze_comments_batch(comments, dim_scores, data_lang)
+
+    # 根据数据语言选择维度标签
+    dim_labels = DIMENSION_LABELS_EN if data_lang == 'en' else DIMENSION_LABELS_ZH
 
     # 保存结果
     results = []
@@ -77,6 +84,8 @@ def run_evaluation(
                 product.image_url = img
 
         llm_result = llm_results.get(pid, {})
+        # 根据数据语言选择维度排名标签
+        dim_ranking_labels = [dim_labels.get(d, d) for d in score_data['dimension_ranking']]
         evaluation = Evaluation(
             user_id=current_user.id,
             product_id=product.id,
@@ -86,11 +95,12 @@ def run_evaluation(
             aesthetics_score=score_data['dimension_scores'].get('Aesthetics', 0),
             cultural_value_score=score_data['dimension_scores'].get('Cultural Values', 0),
             creativity_score=score_data['creativity_score'],
-            dimension_ranking=json.dumps(score_data['dimension_ranking_zh']),
+            dimension_ranking=json.dumps(dim_ranking_labels),
             llm_analysis=llm_result.get('analysis', ''),
             improvement_suggestions=llm_result.get('suggestions', ''),
             sample_count=score_data['sample_count'],
             raw_data_path=data['file_path'],
+            data_language=data_lang,
         )
         db.add(evaluation)
         db.flush()
@@ -102,7 +112,7 @@ def run_evaluation(
             product_image=product.image_url,
             creativity_score=score_data['creativity_score'],
             dimension_scores=score_data['dimension_scores'],
-            dimension_ranking=score_data['dimension_ranking_zh'],
+            dimension_ranking=dim_ranking_labels,
             sample_count=score_data['sample_count'],
             llm_analysis=llm_result.get('analysis'),
             improvement_suggestions=llm_result.get('suggestions'),

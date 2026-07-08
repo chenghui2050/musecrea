@@ -1,3 +1,4 @@
+import re
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
@@ -68,14 +69,65 @@ def extract_products(df: pd.DataFrame) -> Dict:
     }
 
 
+
+
 def is_valid_comment(comment: str) -> bool:
-    """检查评论是否有效（与原代码逻辑一致）"""
-    if not comment or comment.strip() in {'无', '暂无', '还行', '还不错', '非常不错', '', 'nan', 'None', 'none'}:
+    """检查评论是否有效（支持中英文）"""
+    if not comment:
         return False
-    relevant_keywords = {'博物馆', '文创', '产品', '设计', '文化'}
-    if not any(keyword in comment.lower() for keyword in relevant_keywords):
+    stripped = comment.strip()
+    # 空值 / 过短
+    if stripped in {'无', '暂无', '还行', '还不错', '非常不错', '', 'nan', 'None', 'none',
+                    'N/A', 'n/a', 'NA', 'na', '-', '--', 'null', 'NULL', 'ok', 'good', 'fine'}:
         return False
-    return True
+    if len(stripped) < 3:
+        return False
+    # 中英文关键词（任一命中即有效）
+    relevant_keywords = {
+        '博物馆', '文创', '产品', '设计', '文化', '展览', '艺术', '非遗', '国潮',
+    }
+    relevant_keywords_en = {
+        'museum', 'cultural', 'creative', 'product', 'design', 'culture',
+        'exhibit', 'art', 'heritage', 'craft', 'souvenir', 'collection',
+        'gallery', 'historical', 'traditional', 'innovation', 'aesthetic',
+    }
+    lower = stripped.lower()
+    if any(kw in lower for kw in relevant_keywords):
+        return True
+    if any(kw in lower for kw in relevant_keywords_en):
+        return True
+    # 如果评论足够长（>=15字符）且含有中文字符或英文单词，也视为有效
+    if len(stripped) >= 15:
+        if re.search(r'[\u4e00-\u9fff]', stripped):
+            return True
+        if len(stripped.split()) >= 4:
+            return True
+    return False
+
+
+def detect_data_language(comments: Dict[str, List[str]]) -> str:
+    """Detect whether the dataset comments are predominantly Chinese or English.
+
+    Returns 'zh' or 'en'.
+    """
+    all_comments = []
+    for cmts in comments.values():
+        all_comments.extend(cmts)
+
+    if not all_comments:
+        return 'zh'  # default
+
+    zh_count = 0
+    en_count = 0
+    for text in all_comments[:100]:  # sample up to 100
+        cjk = len(re.findall(r'[\u4e00-\u9fff]', text))
+        latin = len(re.findall(r'[a-zA-Z]', text))
+        if cjk > latin:
+            zh_count += 1
+        elif latin > cjk:
+            en_count += 1
+
+    return 'en' if en_count > zh_count else 'zh'
 
 
 def extract_comments(df: pd.DataFrame, product_ids: List[str] = None) -> Dict[str, List[str]]:

@@ -58,6 +58,7 @@ class Evaluation(Base):
     improvement_suggestions = Column(Text)  # LLM generated suggestions
     sample_count = Column(Integer)
     raw_data_path = Column(String(500))  # uploaded file path
+    data_language = Column(String(5), default='zh')  # 'zh' or 'en' — language of the source data
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", back_populates="evaluations")
