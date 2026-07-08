@@ -11,8 +11,16 @@ const MuseCreaI18n = {
     window.location.reload();
   },
 
-  t(key) {
-    return this.messages[this.current]?.[key] || this.messages['zh']?.[key] || key;
+  t(key, ...args) {
+    let text = this.messages[this.current]?.[key] || this.messages['zh']?.[key] || key;
+    if (args.length === 1 && typeof args[0] === 'object' && args[0] !== null) {
+      const obj = args[0];
+      const values = Array.isArray(obj) ? obj : Object.values(obj);
+      values.forEach((v, i) => { text = text.replace(new RegExp('\\{' + i + '\\}', 'g'), v); });
+    } else {
+      args.forEach((v, i) => { text = text.replace(new RegExp('\\{' + i + '\\}', 'g'), v); });
+    }
+    return text;
   },
 
   messages: {
@@ -771,6 +779,6 @@ const MuseCreaI18n = {
 };
 
 // Shorthand translation function
-function t(key) {
-  return MuseCreaI18n.t(key);
+function t(key, ...args) {
+  return MuseCreaI18n.t(key, ...args);
 }

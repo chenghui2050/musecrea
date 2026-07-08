@@ -44,7 +44,7 @@ const ResultsPage = {
             </div>
           </div>
           <span class="dim-bar-value">
-            <span class="rank-badge" :class="'rank-' + (dIdx+1)">{{ t('results.rankN').replace('{0}', dim.rank) }}</span>
+            <span class="rank-badge" :class="'rank-' + (dIdx+1)">{{ t('results.rankN', dim.rank) }}</span>
           </span>
         </div>
       </div>

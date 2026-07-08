@@ -69,7 +69,7 @@ const UploadPage = {
     <div v-if="step === 2" class="section-card">
       <h2>🎯 {{ t('upload.title2') }}</h2>
       <div style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
-        <span class="text-light">{{ t('upload.productSummary', { total: preview.products.length, selected: selectedProducts.length }) }}</span>
+        <span class="text-light">{{ t('upload.productSummary', preview.products.length, selectedProducts.length) }}</span>
         <el-button type="primary" link @click="toggleSelectAll">
           {{ selectedProducts.length === preview.products.length ? t('upload.deselectAll') : t('upload.selectAll') }}
         </el-button>
@@ -139,7 +139,7 @@ const UploadPage = {
       <div class="cost-preview">
         <h3 style="margin-bottom:12px;font-size:15px;">💰 {{ t('upload.costEstimate') }}</h3>
         <div class="cost-row">
-          <span>{{ t('upload.evalCalc', { count: selectedProducts.length }) }}</span>
+          <span>{{ t('upload.evalCalc', selectedProducts.length) }}</span>
           <span>{{ selectedProducts.length }} {{ t('upload.timesUnit') }}</span>
         </div>
         <div class="cost-row" v-if="runLlm">
@@ -176,7 +176,7 @@ const UploadPage = {
     <div v-if="step === 4 && !running && results.length > 0" class="section-card text-center">
       <div style="font-size:48px;margin-bottom:16px">🎉</div>
       <h2>{{ t('upload.done') }}</h2>
-      <p class="text-light" style="margin:12px 0 24px">{{ t('upload.doneSummary', { count: results.length }) }}</p>
+      <p class="text-light" style="margin:12px 0 24px">{{ t('upload.doneSummary', results.length, totalCost) }}</p>
       <div style="display:flex;gap:12px;justify-content:center;">
         <el-button type="primary" size="large" @click="viewResults">📊 {{ t('upload.viewResults') }}</el-button>
         <el-button size="large" @click="$router.push('/dashboard')">{{ t('upload.backHome') }}</el-button>
@@ -306,7 +306,7 @@ const UploadPage = {
           await api.post('/upload/images/batch', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
           });
-          ElementPlus.ElMessage.success(t('upload.imagesUploaded', { count: imageEntries.length }));
+          ElementPlus.ElMessage.success(t('upload.imagesUploaded', imageEntries.length));
         } catch (e) {
           ElementPlus.ElMessage.warning(t('upload.imageUploadFail') + '：' + e.message + t('upload.skipImages'));
         } finally {
