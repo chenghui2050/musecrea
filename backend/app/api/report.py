@@ -211,6 +211,7 @@ REPORT_TEMPLATE = """
 
 def _get_current_user_with_token(request: Request, db: Session = Depends(get_db)):
     """Get current user from either Authorization header or query parameter token."""
+    lang = get_request_lang(request)
     # Try Authorization header first
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
@@ -220,33 +221,12 @@ def _get_current_user_with_token(request: Request, db: Session = Depends(get_db)
         token = request.query_params.get("token")
 
     if not token:
-        lang = get_request_lang(request)
         raise HTTPException(status_code=401, detail=msg("auth.unauthorized", lang))
 
     user = get_user_from_token(token, db)
     if not user:
         raise HTTPException(status_code=401, detail=msg("auth.invalid_credentials", lang))
     return user
-
-
-@router.get("/generate/{evaluation_id}")
-def generate_report(
-    evaluation_id: int,
-    lang: str = Query(default='zh'),
-    current_user: User = Depends(_get_current_user_with_token),
-    db: Session = Depends(get_db),
-):
-    """生成单个评价的可视化报告"""
-    lang = get_request_lang(request)
-    e = db.query(Evaluation).filter(
-        Evaluation.id == evaluation_id,
-        Evaluation.user_id == current_user.id,
-    ).first()
-    if not e:
-        raise HTTPException(status_code=404, detail=msg("report.not_found", lang))
-
-    html = _render_report([e], db, lang=lang)
-    return HTMLResponse(content=html)
 
 
 @router.get("/generate/batch")
@@ -257,7 +237,6 @@ def generate_batch_report(
     db: Session = Depends(get_db),
 ):
     """批量生成报告（逗号分隔的评价ID）"""
-    lang = get_request_lang(request)
     ids = [int(x.strip()) for x in evaluation_ids.split(',')]
     evaluations = db.query(Evaluation).filter(
         Evaluation.id.in_(ids),
@@ -270,6 +249,25 @@ def generate_batch_report(
     return HTMLResponse(content=html)
 
 
+@router.get("/generate/{evaluation_id}")
+def generate_report(
+    evaluation_id: int,
+    lang: str = Query(default='zh'),
+    current_user: User = Depends(_get_current_user_with_token),
+    db: Session = Depends(get_db),
+):
+    """生成单个评价的可视化报告"""
+    e = db.query(Evaluation).filter(
+        Evaluation.id == evaluation_id,
+        Evaluation.user_id == current_user.id,
+    ).first()
+    if not e:
+        raise HTTPException(status_code=404, detail=msg("report.not_found", lang))
+
+    html = _render_report([e], db, lang=lang)
+    return HTMLResponse(content=html)
+
+
 @router.get("/download/{evaluation_id}")
 def download_report(
     evaluation_id: int,
@@ -278,7 +276,6 @@ def download_report(
     db: Session = Depends(get_db),
 ):
     """下载报告为PDF文件（使用fpdf2生成，完美支持中文）"""
-    lang = get_request_lang(request)
     e = db.query(Evaluation).filter(
         Evaluation.id == evaluation_id,
         Evaluation.user_id == current_user.id,
