@@ -9,6 +9,7 @@ from app.database import get_db
 from app.models import User, Evaluation, Report, Product
 from app.core.security import get_current_user, decode_token
 from app.core.i18n import msg, get_request_lang
+from app.services.llm_service import translate_text
 from app.config import settings
 from jinja2 import Template
 from datetime import datetime
@@ -326,6 +327,15 @@ def download_report(
         if os.path.isfile(candidate):
             image_path = candidate
 
+    # Translate LLM content if data language differs from report language
+    llm_analysis = e.llm_analysis or ''
+    improvement_suggestions = e.improvement_suggestions or ''
+    data_lang = getattr(e, 'data_language', None) or 'zh'
+    if data_lang != lang and llm_analysis:
+        llm_analysis = translate_text(llm_analysis, data_lang, lang)
+    if data_lang != lang and improvement_suggestions:
+        improvement_suggestions = translate_text(improvement_suggestions, data_lang, lang)
+
     product_data = {
         'product_id': product.product_id if product else 'N/A',
         'product_name': product.name if product else '',
@@ -333,8 +343,8 @@ def download_report(
         'creativity_score': e.creativity_score,
         'sample_count': e.sample_count,
         'dimensions': dimensions,
-        'llm_analysis': e.llm_analysis or '',
-        'improvement_suggestions': e.improvement_suggestions or '',
+        'llm_analysis': llm_analysis,
+        'improvement_suggestions': improvement_suggestions,
     }
 
     # Generate PDF
@@ -772,6 +782,15 @@ def _render_report(evaluations, db, lang: str = 'zh'):
                 'color': dim_colors.get(dim, '#999'),
             }))
 
+        # Translate LLM content if data language differs from report language
+        llm_analysis = e.llm_analysis or ''
+        improvement_suggestions = e.improvement_suggestions or ''
+        data_lang = getattr(e, 'data_language', None) or 'zh'
+        if data_lang != lang and llm_analysis:
+            llm_analysis = translate_text(llm_analysis, data_lang, lang)
+        if data_lang != lang and improvement_suggestions:
+            improvement_suggestions = translate_text(improvement_suggestions, data_lang, lang)
+
         products.append({
             'product_id': product.product_id if product else 'N/A',
             'product_name': product.name if product else '',
@@ -779,10 +798,10 @@ def _render_report(evaluations, db, lang: str = 'zh'):
             'creativity_score': e.creativity_score,
             'sample_count': e.sample_count,
             'dimensions_ranked': dimensions_ranked,
-            'llm_analysis': e.llm_analysis or '',
-            'improvement_suggestions': e.improvement_suggestions or '',
-            'llm_analysis_html': md.markdown(e.llm_analysis or '', extensions=['tables', 'fenced_code']),
-            'improvement_suggestions_html': md.markdown(e.improvement_suggestions or '', extensions=['tables', 'fenced_code']),
+            'llm_analysis': llm_analysis,
+            'improvement_suggestions': improvement_suggestions,
+            'llm_analysis_html': md.markdown(llm_analysis, extensions=['tables', 'fenced_code']),
+            'improvement_suggestions_html': md.markdown(improvement_suggestions, extensions=['tables', 'fenced_code']),
         })
 
     template = Template(REPORT_TEMPLATE)

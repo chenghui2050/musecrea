@@ -306,3 +306,50 @@ def analyze_comments_batch(
             pid, result = future.result()
             results[pid] = result
     return results
+
+
+def translate_text(text: str, source_lang: str, target_lang: str) -> str:
+    """Translate text between Chinese and English using LLM, preserving markdown formatting.
+
+    Args:
+        text: The text to translate (may contain markdown)
+        source_lang: Source language ('zh' or 'en')
+        target_lang: Target language ('zh' or 'en')
+
+    Returns:
+        Translated text with markdown structure preserved.
+    """
+    if not text or not text.strip():
+        return text
+    if source_lang == target_lang:
+        return text
+
+    target_name = "English" if target_lang == "en" else "Chinese"
+    source_name = "Chinese" if source_lang == "zh" else "English"
+
+    system_prompt = (
+        f"You are a professional translator specializing in museum and cultural product analysis. "
+        f"Translate the following text from {source_name} to {target_name}. "
+        f"IMPORTANT: Preserve ALL markdown formatting exactly as-is — headings (##), "
+        f"bold (**text**), bullet points (-), numbered lists (1.), tables, and line breaks. "
+        f"Do NOT add, remove, or rearrange any sections. Output ONLY the translated text, "
+        f"no explanations or preamble."
+    )
+
+    client = get_llm_client()
+    try:
+        completion = client.chat.completions.create(
+            model=settings.DASHSCOPE_MODEL,
+            messages=[
+                {'role': 'system', 'content': system_prompt},
+                {'role': 'user', 'content': text},
+            ],
+            max_tokens=4000,
+            temperature=0.3,
+        )
+        return completion.choices[0].message.content.strip()
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Translation failed: {e}")
+        return text  # Fall back to original text on failure
