@@ -1,6 +1,7 @@
 from openai import OpenAI
 from typing import Dict, List, Optional
 from app.config import settings
+from app.core.i18n import msg
 
 
 _client = None
@@ -70,6 +71,7 @@ def analyze_comments(
     comments: List[str],
     product_id: str,
     dimension_scores: Optional[Dict[str, float]] = None,
+    lang: str = "zh",
 ) -> Dict[str, str]:
     """
     调用通义千问API分析产品评论，返回五维度分析报告。
@@ -153,12 +155,13 @@ def analyze_comments(
         }
 
     except Exception as e:
-        raise Exception(f"调用通义千问API失败: {str(e)}")
+        raise Exception(msg("llm.api_failed", lang, str(e)))
 
 
 def analyze_comments_batch(
     product_comments: Dict[str, List[str]],
     dimension_scores: Optional[Dict[str, Dict[str, float]]] = None,
+    lang: str = "zh",
 ) -> Dict[str, Dict[str, str]]:
     """批量分析多个产品的评论（并行调用LLM）"""
     from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -168,10 +171,10 @@ def analyze_comments_batch(
         if dimension_scores and product_id in dimension_scores:
             scores = dimension_scores[product_id]
         try:
-            return product_id, analyze_comments(comments, product_id, scores)
+            return product_id, analyze_comments(comments, product_id, scores, lang)
         except Exception as e:
             return product_id, {
-                'analysis': f'分析失败: {str(e)}',
+                'analysis': msg('llm.analysis_failed', lang, str(e)),
                 'suggestions': '',
                 'full_response': '',
                 'error': str(e),

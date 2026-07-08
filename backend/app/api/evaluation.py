@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User, Product, Evaluation
@@ -7,6 +7,7 @@ from app.core.security import get_current_user
 from app.services.creativity import calculate_creativity_scores, extract_comments
 from app.services.llm_service import analyze_comments_batch
 from app.services.billing import deduct_credits, estimate_cost
+from app.core.i18n import msg, get_request_lang
 from app.api.upload import get_uploaded_data, find_product_image
 import json
 
@@ -24,16 +25,18 @@ def get_cost_estimate(
 
 @router.post("/run", response_model=EvaluationResponse)
 def run_evaluation(
+    request: Request,
     req: EvaluationRequest,
     upload_id: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """运行评价计算"""
+    lang = get_request_lang(request)
     # 获取已上传的数据
     data = get_uploaded_data(upload_id, current_user.id)
     if not data:
-        raise HTTPException(status_code=400, detail="请先上传数据文件")
+        raise HTTPException(status_code=400, detail=msg("eval.upload_first", lang))
 
     df = data['dataframe']
     product_ids = req.product_ids
@@ -43,7 +46,7 @@ def run_evaluation(
     if current_user.credits < needed:
         raise HTTPException(
             status_code=402,
-            detail=f"积分不足，需要 {needed} 次，当前余额 {current_user.credits} 次"
+            detail=msg("eval.insufficient_credits", lang, needed, current_user.credits)
         )
 
     # 运行计算
@@ -54,7 +57,7 @@ def run_evaluation(
     llm_results = {}
     if req.run_llm_analysis and comments:
         dim_scores = {pid: s['dimension_scores'] for pid, s in scores.items()}
-        llm_results = analyze_comments_batch(comments, dim_scores)
+        llm_results = analyze_comments_batch(comments, dim_scores, lang)
 
     # 保存结果
     results = []
@@ -157,17 +160,19 @@ def get_evaluation_history(
 
 @router.get("/history/{evaluation_id}")
 def get_evaluation_detail(
+    request: Request,
     evaluation_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """获取单个评价详情"""
+    lang = get_request_lang(request)
     e = db.query(Evaluation).filter(
         Evaluation.id == evaluation_id,
         Evaluation.user_id == current_user.id,
     ).first()
     if not e:
-        raise HTTPException(status_code=404, detail="评价记录不存在")
+        raise HTTPException(status_code=404, detail=msg("eval.not_found", lang))
 
     # 自动发现产品图片：优先用数据库记录，其次扫描文件系统
     product_image = e.product.image_url if e.product else None

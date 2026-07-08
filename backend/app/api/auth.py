@@ -1,21 +1,23 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User
 from app.schemas import UserRegister, UserLogin, UserResponse, TokenResponse
 from app.core.security import get_password_hash, verify_password, create_access_token, get_current_user
+from app.core.i18n import msg, get_request_lang
 
 router = APIRouter(prefix="/auth", tags=["认证"])
 
 
 @router.post("/register", response_model=UserResponse)
-def register(data: UserRegister, db: Session = Depends(get_db)):
+def register(request: Request, data: UserRegister, db: Session = Depends(get_db)):
     """用户注册"""
+    lang = get_request_lang(request)
     # 检查用户名和邮箱是否已存在
     if db.query(User).filter(User.username == data.username).first():
-        raise HTTPException(status_code=400, detail="用户名已被注册")
+        raise HTTPException(status_code=400, detail=msg('auth.username_taken', lang))
     if db.query(User).filter(User.email == data.email).first():
-        raise HTTPException(status_code=400, detail="邮箱已被注册")
+        raise HTTPException(status_code=400, detail=msg('auth.email_taken', lang))
 
     user = User(
         username=data.username,
@@ -32,13 +34,14 @@ def register(data: UserRegister, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(data: UserLogin, db: Session = Depends(get_db)):
+def login(request: Request, data: UserLogin, db: Session = Depends(get_db)):
     """用户登录"""
+    lang = get_request_lang(request)
     user = db.query(User).filter(User.username == data.username).first()
     if not user or not verify_password(data.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="用户名或密码错误")
+        raise HTTPException(status_code=401, detail=msg('auth.wrong_credentials', lang))
     if not user.is_active:
-        raise HTTPException(status_code=403, detail="账号已被禁用")
+        raise HTTPException(status_code=403, detail=msg('auth.account_disabled', lang))
 
     token = create_access_token(data={"sub": user.username})
     return {

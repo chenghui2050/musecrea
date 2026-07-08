@@ -13,7 +13,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="博物馆文创产品创意评价计算平台",
+    description="MuseCrea - Museum Cultural Creative Product Evaluation Platform",
 )
 
 # CORS

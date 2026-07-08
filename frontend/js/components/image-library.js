@@ -1,20 +1,20 @@
 // Image Library Modal Component
 const ImageLibraryModal = {
   template: `
-  <el-dialog v-model="visible" title="📷 产品图片库" width="800px" :close-on-click-modal="false" @close="handleClose">
+  <el-dialog v-model="visible" :title="t('imglib.title')" width="800px" :close-on-click-modal="false" @close="handleClose">
     <div class="img-lib-container">
       <!-- Upload Area -->
       <div class="img-lib-upload" @click="triggerUpload" @dragover.prevent @drop.prevent="handleDrop">
         <div v-if="uploading" style="text-align:center">
           <el-progress type="circle" :percentage="uploadProgress" :width="60" />
-          <p style="margin-top:8px;font-size:13px;color:#999">上传中...</p>
+          <p style="margin-top:8px;font-size:13px;color:#999">{{ t('imglib.uploading') }}</p>
         </div>
         <div v-else style="text-align:center;padding:20px">
           <div style="font-size:36px;margin-bottom:8px">📤</div>
-          <p style="font-size:14px;color:#666">点击或拖拽图片到此处上传</p>
-          <p style="font-size:12px;color:#999;margin-top:4px">支持 JPG / PNG / WEBP，最大 5MB</p>
+          <p style="font-size:14px;color:#666">{{ t('imglib.dropzone') }}</p>
+          <p style="font-size:12px;color:#999;margin-top:4px">{{ t('imglib.formats') }}</p>
           <div style="margin-top:12px;display:flex;justify-content:center;gap:8px;align-items:center;" @click.stop>
-            <el-input v-model="uploadProductId" placeholder="可选：指定产品ID（如 P1）" size="small" style="width:200px" clearable />
+            <el-input v-model="uploadProductId" :placeholder="t('imglib.productIdPlaceholder')" size="small" style="width:200px" clearable />
           </div>
         </div>
         <input ref="uploadInput" type="file" accept="image/*" multiple style="display:none" @change="handleFileSelect">
@@ -23,18 +23,18 @@ const ImageLibraryModal = {
       <!-- Folder Info Hint -->
       <div style="margin:12px 0;">
         <div style="cursor:pointer;font-size:13px;color:#409eff;user-select:none;" @click="showTips = !showTips">
-          💡 图片管理说明 {{ showTips ? '▲' : '▼' }}
+          {{ t('imglib.tipsToggle') }} {{ showTips ? '▲' : '▼' }}
         </div>
         <div v-if="showTips" style="font-size:13px;color:#666;line-height:1.8;padding:8px 0;">
-          <p><strong>方式一：直接上传</strong> — 点击上方区域上传图片到图片库，然后点击「分配」将图片指定给产品。</p>
-          <p><strong>方式二：文件夹批量导入</strong> — 将产品图片放入服务器图片目录后，系统会自动识别：</p>
+          <p><strong>{{ t('imglib.tipDirectTitle') }}</strong> — {{ t('imglib.tipDirectDesc') }}</p>
+          <p><strong>{{ t('imglib.tipFolderTitle') }}</strong> — {{ t('imglib.tipFolderDesc') }}</p>
           <div v-if="folderPath" style="background:#f5f7fa;padding:8px 12px;border-radius:6px;margin:4px 0;font-family:monospace;font-size:12px;">
             📂 {{ folderPath }}
           </div>
-          <p style="margin-top:6px">图片命名规则：文件名与产品 ID 一致（如 <code>P1.jpg</code>、<code>P3.png</code>），系统会自动匹配。</p>
-          <p>支持格式：<code>JPG</code> / <code>PNG</code> / <code>WEBP</code>，单个文件最大 5MB。</p>
-          <p v-if="!folderExists" style="color:#e6a23c;margin-top:6px">⚠️ 图片目录尚未创建，请先上传图片或手动创建目录。</p>
-          <p v-else style="color:#67c23a;margin-top:6px">✅ 图片目录已就绪，当前共 {{ images.length }} 张图片。</p>
+          <p style="margin-top:6px">{{ t('imglib.tipNaming') }}</p>
+          <p>{{ t('imglib.tipFormats') }}</p>
+          <p v-if="!folderExists" style="color:#e6a23c;margin-top:6px">{{ t('imglib.tipNoFolder') }}</p>
+          <p v-else style="color:#67c23a;margin-top:6px">{{ t('imglib.tipFolderReady') }} {{ images.length }} {{ t('imglib.tipImageCount') }}</p>
         </div>
       </div>
 
@@ -44,7 +44,7 @@ const ImageLibraryModal = {
       </div>
       <div v-else-if="images.length === 0" style="text-align:center;padding:40px;color:#999">
         <div style="font-size:48px;margin-bottom:12px">🖼️</div>
-        <p>图片库为空，请上传图片</p>
+        <p>{{ t('imglib.empty') }}</p>
       </div>
       <div v-else class="img-lib-grid">
         <div v-for="img in images" :key="img.filename" class="img-lib-item" :class="{'img-lib-assigned-item': img.assigned_to}">
@@ -55,31 +55,31 @@ const ImageLibraryModal = {
             <div class="img-lib-name">{{ img.product_id }}</div>
             <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
               <span class="img-lib-meta">{{ img.size_text }}</span>
-              <el-tag v-if="img.assigned_to" size="small" type="success">已分配: {{ img.assigned_to }}</el-tag>
+              <el-tag v-if="img.assigned_to" size="small" type="success">{{ t('imglib.assigned') }} {{ img.assigned_to }}</el-tag>
             </div>
           </div>
           <div class="img-lib-actions">
             <template v-if="!img.assigned_to">
               <div v-if="assigningPid === img.filename" style="display:flex;gap:4px;align-items:center;">
-                <el-input v-model="inlinePid" placeholder="产品ID" size="small" style="width:80px" @keyup.enter="quickAssign(img)" />
-                <el-button type="primary" size="small" link @click.stop="quickAssign(img)" :loading="assigningImage === img.filename">确定</el-button>
-                <el-button size="small" link @click.stop="assigningPid = null">取消</el-button>
+                <el-input v-model="inlinePid" :placeholder="t('imglib.productIdInput')" size="small" style="width:80px" @keyup.enter="quickAssign(img)" />
+                <el-button type="primary" size="small" link @click.stop="quickAssign(img)" :loading="assigningImage === img.filename">{{ t('imglib.confirm') }}</el-button>
+                <el-button size="small" link @click.stop="assigningPid = null">{{ t('imglib.cancel') }}</el-button>
               </div>
-              <el-button v-else type="primary" size="small" link @click.stop="startInlineAssign(img)">分配</el-button>
+              <el-button v-else type="primary" size="small" link @click.stop="startInlineAssign(img)">{{ t('imglib.assign') }}</el-button>
             </template>
             <template v-else>
               <div v-if="assigningPid === img.filename" style="display:flex;gap:4px;align-items:center;">
-                <el-input v-model="inlinePid" placeholder="产品ID" size="small" style="width:80px" @keyup.enter="quickAssign(img)" />
-                <el-button type="primary" size="small" link @click.stop="quickAssign(img)" :loading="assigningImage === img.filename">确定</el-button>
-                <el-button size="small" link @click.stop="assigningPid = null">取消</el-button>
+                <el-input v-model="inlinePid" :placeholder="t('imglib.productIdInput')" size="small" style="width:80px" @keyup.enter="quickAssign(img)" />
+                <el-button type="primary" size="small" link @click.stop="quickAssign(img)" :loading="assigningImage === img.filename">{{ t('imglib.confirm') }}</el-button>
+                <el-button size="small" link @click.stop="assigningPid = null">{{ t('imglib.cancel') }}</el-button>
               </div>
               <template v-else>
-                <el-button type="primary" size="small" link @click.stop="startInlineAssign(img)">重新分配</el-button>
-                <el-button type="warning" size="small" link @click.stop="unassignImage(img)" :loading="unassigningImage === img.filename">取消分配</el-button>
+                <el-button type="primary" size="small" link @click.stop="startInlineAssign(img)">{{ t('imglib.reassign') }}</el-button>
+                <el-button type="warning" size="small" link @click.stop="unassignImage(img)" :loading="unassigningImage === img.filename">{{ t('imglib.unassign') }}</el-button>
               </template>
             </template>
             <el-button type="danger" size="small" link @click.stop="confirmDelete(img)" :loading="deletingImage === img.filename">
-              删除
+              {{ t('imglib.delete') }}
             </el-button>
           </div>
         </div>
@@ -87,8 +87,8 @@ const ImageLibraryModal = {
     </div>
 
     <template #footer>
-      <el-button @click="visible = false">关闭</el-button>
-      <el-button type="primary" @click="$emit('refresh')" v-if="hasChanges">刷新页面</el-button>
+      <el-button @click="visible = false">{{ t('imglib.close') }}</el-button>
+      <el-button type="primary" @click="$emit('refresh')" v-if="hasChanges">{{ t('imglib.refresh') }}</el-button>
     </template>
   </el-dialog>
   `,
@@ -135,7 +135,7 @@ const ImageLibraryModal = {
           console.log('[ImageLibrary] P3/P4/P5 data:', debugImgs.map(i => ({filename: i.filename, assigned_to: i.assigned_to})));
         }
       } catch (e) {
-        ElementPlus.ElMessage.error('加载图片库失败：' + e.message);
+        ElementPlus.ElMessage.error(t('imglib.loadFailed') + ': ' + e.message);
       } finally {
         loading.value = false;
       }
@@ -172,7 +172,7 @@ const ImageLibraryModal = {
         await uploadApi.uploadToLibrary(file, pid);
         uploadProgress.value = 100;
         hasChanges.value = true;
-        const msg = pid ? `${file.name} 已上传并分配给产品 ${pid}` : `${file.name} 已上传到图片库`;
+        const msg = pid ? file.name + t('imglib.uploadedAndAssignedTo') + pid : file.name + t('imglib.uploadedToLib');
         ElementPlus.ElMessage.success(msg);
         if (pid) {
           emit('assigned', { productId: pid, imageUrl: `/uploads/images/${file.name}` });
@@ -180,7 +180,7 @@ const ImageLibraryModal = {
         await loadImages();
         await Vue.nextTick();
       } catch (e) {
-        ElementPlus.ElMessage.error('上传失败：' + e.message);
+        ElementPlus.ElMessage.error(t('imglib.uploadFailed') + ': ' + e.message);
       } finally {
         uploading.value = false;
         uploadProgress.value = 0;
@@ -195,20 +195,20 @@ const ImageLibraryModal = {
     const quickAssign = async (img) => {
       const pid = inlinePid.value.trim();
       if (!pid) {
-        ElementPlus.ElMessage.warning('请输入产品ID');
+        ElementPlus.ElMessage.warning(t('imglib.enterProductId'));
         return;
       }
       assigningImage.value = img.filename;
       try {
         await uploadApi.assignImage(img.filename, pid);
         hasChanges.value = true;
-        ElementPlus.ElMessage.success('已将 ' + img.filename + ' 分配给产品 ' + pid);
+        ElementPlus.ElMessage.success(t('imglib.assignSuccessPrefix') + img.filename + t('imglib.assignSuccessTo') + pid);
         emit('assigned', { productId: pid, imageUrl: img.url });
         assigningPid.value = null;
         inlinePid.value = '';
         await loadImages();
       } catch (e) {
-        ElementPlus.ElMessage.error('分配失败：' + e.message);
+        ElementPlus.ElMessage.error(t('imglib.assignFailed') + ': ' + e.message);
       } finally {
         assigningImage.value = null;
       }
@@ -219,11 +219,11 @@ const ImageLibraryModal = {
       try {
         await uploadApi.unassignImage(img.filename);
         hasChanges.value = true;
-        ElementPlus.ElMessage.success('已取消 ' + img.filename + ' 的分配');
+        ElementPlus.ElMessage.success(t('imglib.unassignSuccessPrefix') + img.filename);
         emit('refresh');
         await loadImages();
       } catch (e) {
-        ElementPlus.ElMessage.error('取消分配失败：' + e.message);
+        ElementPlus.ElMessage.error(t('imglib.unassignFailed') + ': ' + e.message);
       } finally {
         unassigningImage.value = null;
       }
@@ -231,9 +231,9 @@ const ImageLibraryModal = {
 
     const confirmDelete = (img) => {
       ElementPlus.ElMessageBox.confirm(
-        '确定要删除图片 "' + img.filename + '" 吗？',
-        '确认删除',
-        { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消', confirmButtonClass: 'el-button--danger' }
+        t('imglib.confirmDeletePrefix') + img.filename + t('imglib.confirmDeleteSuffix'),
+        t('imglib.confirmDeleteTitle'),
+        { type: 'warning', confirmButtonText: t('imglib.delete'), cancelButtonText: t('imglib.cancel'), confirmButtonClass: 'el-button--danger' }
       ).then(() => doDelete(img)).catch(() => {});
     };
 
@@ -242,10 +242,10 @@ const ImageLibraryModal = {
       try {
         await uploadApi.deleteImage(img.filename);
         hasChanges.value = true;
-        ElementPlus.ElMessage.success('已删除 ' + img.filename);
+        ElementPlus.ElMessage.success(t('imglib.deletedPrefix') + img.filename);
         await loadImages();
       } catch (e) {
-        ElementPlus.ElMessage.error('删除失败：' + e.message);
+        ElementPlus.ElMessage.error(t('imglib.deleteFailed') + ': ' + e.message);
       } finally {
         deletingImage.value = null;
       }
@@ -281,7 +281,7 @@ const ImageLibraryModal = {
       folderExists, folderPath, showTips,
       triggerUpload, handleFileSelect, handleDrop,
       confirmDelete, getExt, handleClose, loadImages, cacheBust,
-      startInlineAssign, quickAssign, unassignImage,
+      startInlineAssign, quickAssign, unassignImage, t,
     };
   }
 };

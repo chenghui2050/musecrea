@@ -5,11 +5,12 @@ import shutil
 from typing import Optional, List
 from datetime import datetime
 import pandas as pd
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Request
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User, Product
 from app.core.security import get_current_user
+from app.core.i18n import msg, get_request_lang
 from app.services.creativity import validate_dataframe, extract_products, DIMENSION_COLUMNS
 from app.config import settings
 
@@ -54,20 +55,22 @@ _uploaded_data = {}
 
 @router.post("/excel")
 async def upload_excel(
+    request: Request,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """上传Excel文件并预览数据"""
+    lang = get_request_lang(request)
     # 检查文件大小
     content = await file.read()
     size_mb = len(content) / (1024 * 1024)
     if size_mb > settings.MAX_UPLOAD_SIZE_MB:
-        raise HTTPException(status_code=400, detail=f"文件大小超过限制 ({settings.MAX_UPLOAD_SIZE_MB}MB)")
+        raise HTTPException(status_code=400, detail=msg("upload.file_too_large", lang, settings.MAX_UPLOAD_SIZE_MB))
 
     # 检查文件类型
     if not file.filename.endswith(('.xlsx', '.xls', '.csv')):
-        raise HTTPException(status_code=400, detail="仅支持 .xlsx, .xls, .csv 格式")
+        raise HTTPException(status_code=400, detail=msg("upload.unsupported_format", lang))
 
     # 保存文件
     upload_id = str(uuid.uuid4())[:12]
@@ -86,9 +89,9 @@ async def upload_excel(
         else:
             df = pd.read_excel(file_path, sheet_name=0)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"无法读取文件: {str(e)}")
+        raise HTTPException(status_code=400, detail=msg("upload.read_error", lang, str(e)))
 
-    valid, message = validate_dataframe(df)
+    valid, message = validate_dataframe(df, lang)
     if not valid:
         raise HTTPException(status_code=400, detail=message)
 
@@ -114,28 +117,30 @@ async def upload_excel(
         'upload_id': upload_id,
         'filename': file.filename,
         'preview': preview,
-        'warnings': _generate_warnings(preview),
+        'warnings': _generate_warnings(preview, lang),
     }
 
 
 @router.post("/image/{product_db_id}")
 async def upload_product_image(
+    request: Request,
     product_db_id: int,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """上传产品图片"""
+    lang = get_request_lang(request)
     product = db.query(Product).filter(Product.id == product_db_id).first()
     if not product:
-        raise HTTPException(status_code=404, detail="产品不存在")
+        raise HTTPException(status_code=404, detail=msg("upload.product_not_found", lang))
 
     content = await file.read()
     if len(content) > 5 * 1024 * 1024:  # 5MB limit
-        raise HTTPException(status_code=400, detail="图片大小不能超过5MB")
+        raise HTTPException(status_code=400, detail=msg("upload.image_too_large", lang))
 
     if not file.filename.lower().endswith(('.jpg', '.jpeg', '.png', '.webp')):
-        raise HTTPException(status_code=400, detail="仅支持 JPG/PNG/WEBP 格式")
+        raise HTTPException(status_code=400, detail=msg("upload.unsupported_image", lang))
 
     img_dir = os.path.join(settings.UPLOAD_DIR, "images")
     os.makedirs(img_dir, exist_ok=True)
@@ -237,18 +242,20 @@ def get_image_library(
 
 @router.post("/image-library/upload")
 async def upload_to_library(
+    request: Request,
     file: UploadFile = File(...),
     product_id: Optional[str] = Form(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """上传图片到图片库，可选择直接分配给某个产品"""
+    lang = get_request_lang(request)
     content = await file.read()
     if len(content) > 5 * 1024 * 1024:
-        raise HTTPException(status_code=400, detail="图片大小不能超过5MB")
+        raise HTTPException(status_code=400, detail=msg("upload.image_too_large", lang))
 
     if not file.filename.lower().endswith(('.jpg', '.jpeg', '.png', '.webp')):
-        raise HTTPException(status_code=400, detail="仅支持 JPG/PNG/WEBP 格式")
+        raise HTTPException(status_code=400, detail=msg("upload.unsupported_image", lang))
 
     img_dir = os.path.join(settings.UPLOAD_DIR, "images")
     os.makedirs(img_dir, exist_ok=True)
@@ -263,7 +270,7 @@ async def upload_to_library(
     if product_id:
         product = db.query(Product).filter(Product.product_id == product_id).first()
         if not product:
-            raise HTTPException(status_code=404, detail=f"产品ID '{product_id}' 不存在，请检查是否正确（注意大小写、下划线、横杠等是否遗漏或错误）")
+            raise HTTPException(status_code=404, detail=msg("upload.product_id_not_found", lang, product_id))
         # 清除其他产品对该文件的引用
         file_url = f"/uploads/images/{save_name}"
         db.query(Product).filter(
@@ -282,22 +289,24 @@ async def upload_to_library(
 
 @router.put("/image-library/assign")
 def assign_image_to_product(
+    request: Request,
     filename: str = Form(...),
     product_id: str = Form(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """将图片库中的某张图片分配给指定产品（直接引用，不创建副本）"""
+    lang = get_request_lang(request)
     img_dir = os.path.join(settings.UPLOAD_DIR, "images")
     src_path = os.path.join(img_dir, filename)
 
     if not os.path.isfile(src_path):
-        raise HTTPException(status_code=404, detail="图片不存在")
+        raise HTTPException(status_code=404, detail=msg("upload.image_not_found", lang))
 
     # 查找目标产品
     product = db.query(Product).filter(Product.product_id == product_id).first()
     if not product:
-        raise HTTPException(status_code=404, detail=f"产品ID '{product_id}' 不存在，请检查是否正确（注意大小写、下划线、横杠等是否遗漏或错误）")
+        raise HTTPException(status_code=404, detail=msg("upload.product_id_not_found", lang, product_id))
 
     new_url = f"/uploads/images/{filename}"
     old_url = product.image_url
@@ -351,16 +360,18 @@ def unassign_image(
 
 @router.delete("/image-library/file/{filename}")
 def delete_library_image(
+    request: Request,
     filename: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """删除图片库中的图片"""
+    lang = get_request_lang(request)
     img_dir = os.path.join(settings.UPLOAD_DIR, "images")
     file_path = os.path.join(img_dir, filename)
 
     if not os.path.isfile(file_path):
-        raise HTTPException(status_code=404, detail="图片不存在")
+        raise HTTPException(status_code=404, detail=msg("upload.image_not_found", lang))
 
     # 清除所有引用该文件的产品
     file_url = f"/uploads/images/{filename}"
@@ -385,16 +396,16 @@ def _format_size(size_bytes: int) -> str:
         return f"{size_bytes / (1024 * 1024):.1f} MB"
 
 
-def _generate_warnings(preview: dict) -> list:
+def _generate_warnings(preview: dict, lang: str = "zh") -> list:
     """生成数据质量警告"""
     warnings = []
     for pid, count in preview['sample_counts'].items():
         if count < 200:
-            warnings.append(f"产品 {pid} 样本数为 {count}，低于建议的200份，结果可能不够准确。")
+            warnings.append(msg("data.low_samples", lang, pid, count))
     if not preview['has_comments']:
-        warnings.append("数据中未检测到 Comments 列，将无法进行消费者评论分析。")
+        warnings.append(msg("data.no_comments_col", lang))
     elif preview['valid_comments_count'] == 0:
-        warnings.append("未检测到有效评论（评论过短或与文创无关的将被过滤）。")
+        warnings.append(msg("data.no_valid_comments", lang))
     return warnings
 
 

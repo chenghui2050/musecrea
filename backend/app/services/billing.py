@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from app.models import User, Order, Coupon
 from app.config import settings
 from datetime import datetime
+from app.core.i18n import msg
 import uuid
 
 
@@ -101,7 +102,7 @@ def add_credits(user: User, db: Session, count: int) -> User:
     return user
 
 
-def redeem_coupon(user: User, db: Session, code: str) -> dict:
+def redeem_coupon(user: User, db: Session, code: str, lang: str = "zh") -> dict:
     """兑换优惠券"""
     coupon = db.query(Coupon).filter(
         Coupon.code == code,
@@ -109,16 +110,16 @@ def redeem_coupon(user: User, db: Session, code: str) -> dict:
     ).first()
 
     if not coupon:
-        return {'success': False, 'message': '无效的优惠券码'}
+        return {'success': False, 'message': msg('billing.invalid_coupon', lang)}
 
     if coupon.used_count >= coupon.max_uses:
-        return {'success': False, 'message': '该优惠券已达到使用上限'}
+        return {'success': False, 'message': msg('billing.coupon_max_reached', lang)}
 
     if coupon.expires_at and coupon.expires_at < datetime.utcnow():
-        return {'success': False, 'message': '该优惠券已过期'}
+        return {'success': False, 'message': msg('billing.coupon_expired', lang)}
 
     if coupon.used_by and coupon.used_by != user.id and coupon.max_uses == 1:
-        return {'success': False, 'message': '该优惠券已被其他用户使用'}
+        return {'success': False, 'message': msg('billing.coupon_other_user', lang)}
 
     # 兑换成功
     credits_to_add = coupon.credits_value or 1
@@ -132,6 +133,6 @@ def redeem_coupon(user: User, db: Session, code: str) -> dict:
 
     return {
         'success': True,
-        'message': f'兑换成功！已获得 {credits_to_add} 次免费评价机会',
+        'message': msg('billing.redeem_success', lang, credits_to_add),
         'credits_added': credits_to_add,
     }

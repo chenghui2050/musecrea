@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timedelta
@@ -6,6 +6,7 @@ from app.database import get_db
 from app.models import User, Evaluation, Order, Coupon
 from app.schemas import SystemStats, CouponCreate, CouponResponse
 from app.core.security import get_current_admin
+from app.core.i18n import msg, get_request_lang
 
 router = APIRouter(prefix="/admin", tags=["管理后台"])
 
@@ -77,14 +78,16 @@ def list_users(
 
 @router.put("/users/{user_id}/toggle-active")
 def toggle_user_active(
+    request: Request,
     user_id: int,
     db: Session = Depends(get_db),
     admin: User = Depends(get_current_admin),
 ):
     """启用/禁用用户"""
+    lang = get_request_lang(request)
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="用户不存在")
+        raise HTTPException(status_code=404, detail=msg("admin.user_not_found", lang))
     user.is_active = not user.is_active
     db.commit()
     return {'user_id': user_id, 'is_active': user.is_active}
@@ -92,15 +95,17 @@ def toggle_user_active(
 
 @router.put("/users/{user_id}/credits")
 def update_user_credits(
+    request: Request,
     user_id: int,
     credits: int,
     db: Session = Depends(get_db),
     admin: User = Depends(get_current_admin),
 ):
     """调整用户积分"""
+    lang = get_request_lang(request)
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
-        raise HTTPException(status_code=404, detail="用户不存在")
+        raise HTTPException(status_code=404, detail=msg("admin.user_not_found", lang))
     user.credits = credits
     db.commit()
     return {'user_id': user_id, 'credits': credits}
@@ -142,14 +147,16 @@ def get_api_logs(
 
 @router.post("/coupons", response_model=CouponResponse)
 def create_coupon(
+    request: Request,
     req: CouponCreate,
     db: Session = Depends(get_db),
     admin: User = Depends(get_current_admin),
 ):
     """创建优惠券"""
+    lang = get_request_lang(request)
     existing = db.query(Coupon).filter(Coupon.code == req.code).first()
     if existing:
-        raise HTTPException(status_code=400, detail="优惠券码已存在")
+        raise HTTPException(status_code=400, detail=msg("admin.coupon_exists", lang))
 
     coupon = Coupon(
         code=req.code,
@@ -183,14 +190,16 @@ def list_coupons(
 
 @router.delete("/coupons/{coupon_id}")
 def delete_coupon(
+    request: Request,
     coupon_id: int,
     db: Session = Depends(get_db),
     admin: User = Depends(get_current_admin),
 ):
     """删除优惠券"""
+    lang = get_request_lang(request)
     coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
     if not coupon:
-        raise HTTPException(status_code=404, detail="优惠券不存在")
+        raise HTTPException(status_code=404, detail=msg("admin.coupon_not_found", lang))
     db.delete(coupon)
     db.commit()
-    return {'message': '优惠券已删除'}
+    return {'message': msg('admin.coupon_deleted', lang)}

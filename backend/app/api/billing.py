@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User, Order
 from app.schemas import CostEstimate, OrderCreate, OrderResponse, CouponRedeem
 from app.core.security import get_current_user
 from app.services.billing import estimate_cost, create_order, redeem_coupon
+from app.core.i18n import msg, get_request_lang
 
 router = APIRouter(prefix="/billing", tags=["计费系统"])
 
@@ -70,12 +71,14 @@ def list_orders(
 
 @router.post("/redeem-coupon")
 def redeem_coupon_endpoint(
+    request: Request,
     req: CouponRedeem,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """兑换优惠券"""
-    result = redeem_coupon(current_user, db, req.code)
+    lang = get_request_lang(request)
+    result = redeem_coupon(current_user, db, req.code, lang)
     if not result['success']:
         raise HTTPException(status_code=400, detail=result['message'])
     return result

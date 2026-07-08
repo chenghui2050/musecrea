@@ -5,19 +5,20 @@ const AppLayout = {
     <!-- Header -->
     <header class="app-header">
       <div class="logo" @click="$router.push('/dashboard')" style="cursor:pointer">
-        MuseCrea<span>文创产品创意评价系统</span>
+        MuseCrea<span>{{ t('app.subtitle') }}</span>
       </div>
       <div class="header-right">
-        <span class="credits-badge">💰 {{ userCredits }} 次</span>
+        <span class="credits-badge">💰 {{ userCredits }} {{ t('nav.credits') }}</span>
+        <button @click="toggleLang" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;margin-right:12px;">{{ currentLang === 'zh' ? 'EN' : '中' }}</button>
         <el-dropdown @command="handleCommand">
           <span style="color:white;cursor:pointer;font-size:14px;">
             {{ userName }} ▾
           </span>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item command="profile">👤 个人信息</el-dropdown-item>
-              <el-dropdown-item command="admin" v-if="isAdmin">⚙️ 管理后台</el-dropdown-item>
-              <el-dropdown-item command="logout" divided>🚪 退出登录</el-dropdown-item>
+              <el-dropdown-item command="profile">👤 {{ t('nav.profileInfo') }}</el-dropdown-item>
+              <el-dropdown-item command="admin" v-if="isAdmin">⚙️ {{ t('nav.admin') }}</el-dropdown-item>
+              <el-dropdown-item command="logout" divided>🚪 {{ t('nav.logout') }}</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -29,19 +30,19 @@ const AppLayout = {
       <aside class="app-sidebar">
         <ul class="sidebar-menu">
           <li :class="{ active: $route.path === '/dashboard' }" @click="$router.push('/dashboard')">
-            <span class="icon">📊</span> 工作台
+            <span class="icon">📊</span> {{ t('nav.dashboard') }}
           </li>
           <li :class="{ active: $route.path === '/upload' }" @click="$router.push('/upload')">
-            <span class="icon">📤</span> 上传评价
+            <span class="icon">📤</span> {{ t('nav.upload') }}
           </li>
           <li :class="{ active: $route.path === '/history' }" @click="$router.push('/history')">
-            <span class="icon">📋</span> 历史记录
+            <span class="icon">📋</span> {{ t('nav.history') }}
           </li>
           <li :class="{ active: $route.path === '/profile' }" @click="$router.push('/profile')">
-            <span class="icon">👤</span> 个人中心
+            <span class="icon">👤</span> {{ t('nav.profile') }}
           </li>
           <li v-if="isAdmin" :class="{ active: $route.path === '/admin' }" @click="$router.push('/admin')">
-            <span class="icon">⚙️</span> 管理后台
+            <span class="icon">⚙️</span> {{ t('nav.admin') }}
           </li>
         </ul>
       </aside>
@@ -58,14 +59,14 @@ const AppLayout = {
 
     // Use separate reactive refs for guaranteed reactivity
     const isAdmin = Vue.ref(false);
-    const userName = Vue.ref('用户');
+    const userName = Vue.ref(t('nav.defaultUser'));
     const userCredits = Vue.ref(0);
 
     // Read from localStorage first (instant render)
     const cached = getUser();
     if (cached) {
       isAdmin.value = cached.role === 'admin';
-      userName.value = cached.username || '用户';
+      userName.value = cached.username || t('nav.defaultUser');
       userCredits.value = cached.credits || 0;
     }
 
@@ -74,7 +75,7 @@ const AppLayout = {
       try {
         const freshUser = await authApi.getMe();
         isAdmin.value = freshUser.role === 'admin';
-        userName.value = freshUser.username || '用户';
+        userName.value = freshUser.username || t('nav.defaultUser');
         userCredits.value = freshUser.credits || 0;
         localStorage.setItem('musecrea_user', JSON.stringify(freshUser));
         console.log('[MuseCrea] User role:', freshUser.role);
@@ -95,6 +96,11 @@ const AppLayout = {
       }
     };
 
-    return { isAdmin, userName, userCredits, handleCommand, fetchUser };
+    const currentLang = Vue.ref(MuseCreaI18n.current);
+    const toggleLang = () => {
+      MuseCreaI18n.setLocale(currentLang.value === 'zh' ? 'en' : 'zh');
+    };
+
+    return { isAdmin, userName, userCredits, handleCommand, fetchUser, t, currentLang, toggleLang };
   }
 };

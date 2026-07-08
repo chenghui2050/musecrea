@@ -2,12 +2,13 @@ from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 from app.models import User
+from app.core.i18n import msg, get_request_lang
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -36,10 +37,11 @@ def decode_token(token: str) -> dict:
         return None
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+async def get_current_user(request: Request, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+    lang = get_request_lang(request)
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="无效的认证凭据",
+        detail=msg("auth.invalid_credentials", lang),
         headers={"WWW-Authenticate": "Bearer"},
     )
     payload = decode_token(token)
@@ -54,7 +56,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     return user
 
 
-async def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
+async def get_current_admin(request: Request, current_user: User = Depends(get_current_user)) -> User:
+    lang = get_request_lang(request)
     if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="需要管理员权限")
+        raise HTTPException(status_code=403, detail=msg("auth.admin_required", lang))
     return current_user

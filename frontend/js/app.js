@@ -1,8 +1,9 @@
 // Main App Initialization
 const app = Vue.createApp({});
 
-// Use Element Plus
-app.use(ElementPlus, { locale: ElementPlusLocaleZhCn });
+// Use Element Plus with correct locale
+const elLocale = MuseCreaI18n.current === 'en' ? ElementPlusLocaleEn : ElementPlusLocaleZhCn;
+app.use(ElementPlus, { locale: elLocale });
 
 // Register all Element Plus icons
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
@@ -12,8 +13,15 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 // Register global components
 app.component('image-library-modal', ImageLibraryModal);
 
+// Make translation function globally available
+app.config.globalProperties.$t = t;
+
 // Use Router
 app.use(router);
+
+// Set page title and lang attribute
+document.title = t('app.title');
+document.documentElement.lang = MuseCreaI18n.current === 'zh' ? 'zh-CN' : 'en';
 
 // Mount
 app.mount('#app');

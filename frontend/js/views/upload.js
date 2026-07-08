@@ -6,72 +6,72 @@ const UploadPage = {
     <div class="step-indicator">
       <div class="step-item" :class="{ active: step===1, done: step>1 }">
         <span class="step-num">{{ step > 1 ? '✓' : '1' }}</span>
-        <span class="step-label">上传数据</span>
+        <span class="step-label">{{ t('upload.step1') }}</span>
       </div>
       <div class="step-connector" :class="{ done: step>1 }"></div>
       <div class="step-item" :class="{ active: step===2, done: step>2 }">
         <span class="step-num">{{ step > 2 ? '✓' : '2' }}</span>
-        <span class="step-label">选择产品</span>
+        <span class="step-label">{{ t('upload.step2') }}</span>
       </div>
       <div class="step-connector" :class="{ done: step>2 }"></div>
       <div class="step-item" :class="{ active: step===3, done: step>3 }">
         <span class="step-num">{{ step > 3 ? '✓' : '3' }}</span>
-        <span class="step-label">确认运行</span>
+        <span class="step-label">{{ t('upload.step3') }}</span>
       </div>
       <div class="step-connector" :class="{ done: step>3 }"></div>
       <div class="step-item" :class="{ active: step===4 }">
         <span class="step-num">4</span>
-        <span class="step-label">查看结果</span>
+        <span class="step-label">{{ t('upload.step4') }}</span>
       </div>
     </div>
 
     <!-- Step 1: Upload File -->
     <div v-if="step === 1" class="section-card">
-      <h2>📤 上传评价数据</h2>
+      <h2>📤 {{ t('upload.title1') }}</h2>
       <p style="color:#666;margin-bottom:20px;font-size:14px">
-        请上传包含消费者问卷数据的 Excel 文件（.xlsx），需包含 Product ID、各维度评分和 Comments 列。
+        {{ t('upload.desc1') }}
       </p>
       <div class="upload-zone" @click="triggerFileInput" @dragover.prevent @drop.prevent="handleDrop">
         <div class="upload-icon">📁</div>
-        <h3>点击或拖拽文件到此处</h3>
-        <p>支持 .xlsx / .xls / .csv 格式，最大 20MB</p>
+        <h3>{{ t('upload.dropzone') }}</h3>
+        <p>{{ t('upload.formats') }}</p>
         <input ref="fileInput" type="file" accept=".xlsx,.xls,.csv" style="display:none" @change="handleFileSelect">
       </div>
       <div v-if="uploadProgress > 0 && uploadProgress < 100" style="margin-top:20px">
         <el-progress :percentage="uploadProgress" :stroke-width="8" />
-        <p style="text-align:center;color:#999;margin-top:8px">正在上传并解析数据...</p>
+        <p style="text-align:center;color:#999;margin-top:8px">{{ t('upload.parsing') }}</p>
       </div>
     </div>
 
     <!-- Step 1.5: Preview & Warnings -->
     <div v-if="step === 1 && preview" class="section-card" style="margin-top:20px">
-      <h2>📋 数据预览</h2>
+      <h2>📋 {{ t('upload.preview') }}</h2>
       <el-descriptions :column="2" border>
-        <el-descriptions-item label="文件名">{{ filename }}</el-descriptions-item>
-        <el-descriptions-item label="总行数">{{ preview.total_rows }}</el-descriptions-item>
-        <el-descriptions-item label="产品数">{{ preview.products.length }}</el-descriptions-item>
-        <el-descriptions-item label="包含评论">
+        <el-descriptions-item :label="t('upload.fileName')">{{ filename }}</el-descriptions-item>
+        <el-descriptions-item :label="t('upload.totalRows')">{{ preview.total_rows }}</el-descriptions-item>
+        <el-descriptions-item :label="t('upload.productCount')">{{ preview.products.length }}</el-descriptions-item>
+        <el-descriptions-item :label="t('upload.hasComments')">
           <el-tag :type="preview.has_comments ? 'success' : 'danger'" size="small">
-            {{ preview.has_comments ? '是' : '否' }}
+            {{ preview.has_comments ? t('common.yes') : t('common.no') }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="有效评论数" v-if="preview.has_comments">{{ preview.valid_comments_count }}</el-descriptions-item>
+        <el-descriptions-item :label="t('upload.validComments')" v-if="preview.has_comments">{{ preview.valid_comments_count }}</el-descriptions-item>
       </el-descriptions>
 
       <el-alert v-for="(w, i) in warnings" :key="i" :title="w" type="warning" show-icon :closable="false" style="margin-top:10px" />
 
       <div style="text-align:center;margin-top:24px">
-        <el-button type="primary" size="large" @click="step = 2">下一步：选择产品 →</el-button>
+        <el-button type="primary" size="large" @click="step = 2">{{ t('upload.nextStep') }}</el-button>
       </div>
     </div>
 
     <!-- Step 2: Select Products -->
     <div v-if="step === 2" class="section-card">
-      <h2>🎯 选择产品并上传照片</h2>
+      <h2>🎯 {{ t('upload.title2') }}</h2>
       <div style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
-        <span class="text-light">共 {{ preview.products.length }} 个产品，已选 {{ selectedProducts.length }} 个</span>
+        <span class="text-light">{{ t('upload.productSummary', { total: preview.products.length, selected: selectedProducts.length }) }}</span>
         <el-button type="primary" link @click="toggleSelectAll">
-          {{ selectedProducts.length === preview.products.length ? '取消全选' : '全选' }}
+          {{ selectedProducts.length === preview.products.length ? t('upload.deselectAll') : t('upload.selectAll') }}
         </el-button>
       </div>
       <div class="product-select-grid">
@@ -80,22 +80,22 @@ const UploadPage = {
           @click="toggleProduct(pid)">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div class="pid">{{ pid }}</div>
-            <el-tag v-if="selectedProducts.includes(pid)" type="success" size="small">已选</el-tag>
+            <el-tag v-if="selectedProducts.includes(pid)" type="success" size="small">{{ t('upload.selectedTag') }}</el-tag>
           </div>
-          <div class="count">样本数：{{ preview.sample_counts[pid] }}</div>
-          <el-tag v-if="preview.sample_counts[pid] < 200" type="warning" size="small" style="margin-top:6px">样本偏少</el-tag>
+          <div class="count">{{ t('upload.sampleCount') }}：{{ preview.sample_counts[pid] }}</div>
+          <el-tag v-if="preview.sample_counts[pid] < 200" type="warning" size="small" style="margin-top:6px">{{ t('upload.sampleLow') }}</el-tag>
 
           <!-- Product Image Upload - always visible, click handled separately -->
           <div class="product-img-upload" @click="$event.stopPropagation()">
             <div v-if="productImagePreviews && productImagePreviews[pid]" class="product-img-preview">
               <img :src="productImagePreviews[pid]" />
               <div class="product-img-overlay" @click="removeProductImage(pid)">
-                <span>✕ 移除</span>
+                <span>✕ {{ t('upload.remove') }}</span>
               </div>
             </div>
             <div v-else class="product-img-dropzone" @click="openImagePicker(pid)">
               <span class="img-upload-icon">📷</span>
-              <span class="img-upload-text">点击上传照片</span>
+              <span class="img-upload-text">{{ t('upload.clickUpload') }}</span>
             </div>
           </div>
         </div>
@@ -104,19 +104,19 @@ const UploadPage = {
       <input ref="sharedImgInput" type="file" accept="image/*" style="position:absolute;visibility:hidden;width:0;height:0;" @change="onSharedImageChange">
 
       <div style="text-align:center;margin-top:24px;display:flex;gap:12px;justify-content:center;">
-        <el-button size="large" @click="step = 1">← 上一步</el-button>
+        <el-button size="large" @click="step = 1">← {{ t('upload.prevStep') }}</el-button>
         <el-button type="primary" size="large" :disabled="selectedProducts.length === 0" :loading="uploadingImages" @click="goToConfirm">
-          {{ uploadingImages ? '正在上传图片...' : '下一步：确认运行 →' }}
+          {{ uploadingImages ? t('upload.uploading') : t('upload.nextConfirm') }}
         </el-button>
       </div>
     </div>
 
     <!-- Step 3: Confirm & Run -->
     <div v-if="step === 3" class="section-card">
-      <h2>⚡ 确认评价设置</h2>
+      <h2>⚡ {{ t('upload.title3') }}</h2>
 
       <el-descriptions :column="1" border style="margin-bottom:20px">
-        <el-descriptions-item label="已选产品">
+        <el-descriptions-item :label="t('upload.selectedProducts')">
           <div style="display:flex;flex-wrap:wrap;gap:8px;">
             <span v-for="pid in selectedProducts" :key="pid"
               style="display:inline-flex;align-items:center;gap:4px;background:#f0f2ff;padding:4px 12px;border-radius:16px;font-size:13px;">
@@ -126,42 +126,42 @@ const UploadPage = {
             </span>
           </div>
         </el-descriptions-item>
-        <el-descriptions-item label="产品数量">{{ selectedProducts.length }} 个</el-descriptions-item>
-        <el-descriptions-item label="已上传图片">{{ Object.keys(productImagePreviews).length }} 张</el-descriptions-item>
+        <el-descriptions-item :label="t('upload.productCountLabel')">{{ selectedProducts.length }} {{ t('upload.countUnit') }}</el-descriptions-item>
+        <el-descriptions-item :label="t('upload.uploadedImages')">{{ Object.keys(productImagePreviews).length }} {{ t('upload.imageUnit') }}</el-descriptions-item>
       </el-descriptions>
 
       <div style="margin-bottom:20px">
         <el-checkbox v-model="runLlm" size="large">
-          🤖 启用 AI 消费者评论分析（调用通义千问大模型，每个产品额外消耗1次积分）
+          🤖 {{ t('upload.enableLlm') }}
         </el-checkbox>
       </div>
 
       <div class="cost-preview">
-        <h3 style="margin-bottom:12px;font-size:15px;">💰 费用预估</h3>
+        <h3 style="margin-bottom:12px;font-size:15px;">💰 {{ t('upload.costEstimate') }}</h3>
         <div class="cost-row">
-          <span>评价计算（{{ selectedProducts.length }} 个产品）</span>
-          <span>{{ selectedProducts.length }} 次</span>
+          <span>{{ t('upload.evalCalc', { count: selectedProducts.length }) }}</span>
+          <span>{{ selectedProducts.length }} {{ t('upload.timesUnit') }}</span>
         </div>
         <div class="cost-row" v-if="runLlm">
-          <span>AI 评论分析</span>
-          <span>{{ selectedProducts.length }} 次</span>
+          <span>{{ t('upload.aiAnalysis') }}</span>
+          <span>{{ selectedProducts.length }} {{ t('upload.timesUnit') }}</span>
         </div>
         <div class="cost-row total">
-          <span>总计消耗积分</span>
-          <span>{{ totalCost }} 次</span>
+          <span>{{ t('upload.totalCost') }}</span>
+          <span>{{ totalCost }} {{ t('upload.timesUnit') }}</span>
         </div>
         <div class="cost-row">
-          <span>当前余额</span>
-          <span :style="{ color: userCredits >= totalCost ? '#67c23a' : '#f56c6c' }">{{ userCredits }} 次</span>
+          <span>{{ t('upload.currentBalance') }}</span>
+          <span :style="{ color: userCredits >= totalCost ? '#67c23a' : '#f56c6c' }">{{ userCredits }} {{ t('upload.timesUnit') }}</span>
         </div>
       </div>
 
-      <el-alert v-if="userCredits < totalCost" title="积分不足，请先充值或兑换优惠券" type="error" show-icon style="margin-top:12px" />
+      <el-alert v-if="userCredits < totalCost" :title="t('upload.insufficientCredits')" type="error" show-icon style="margin-top:12px" />
 
       <div style="text-align:center;margin-top:24px;display:flex;gap:12px;justify-content:center;">
-        <el-button size="large" @click="step = 2">← 上一步</el-button>
+        <el-button size="large" @click="step = 2">← {{ t('upload.prevStep') }}</el-button>
         <el-button type="primary" size="large" :loading="running" :disabled="userCredits < totalCost" @click="runEvaluation">
-          🚀 开始评价计算
+          🚀 {{ t('upload.startEval') }}
         </el-button>
       </div>
     </div>
@@ -169,17 +169,17 @@ const UploadPage = {
     <!-- Step 4: Running / Results -->
     <div v-if="step === 4 && running" class="section-card text-center">
       <el-progress type="circle" :percentage="runProgress" :width="120" :stroke-width="8" />
-      <h3 style="margin-top:20px">正在计算中...</h3>
+      <h3 style="margin-top:20px">{{ t('upload.calculating') }}</h3>
       <p class="text-light" style="margin-top:8px">{{ runStatusText }}</p>
     </div>
 
     <div v-if="step === 4 && !running && results.length > 0" class="section-card text-center">
       <div style="font-size:48px;margin-bottom:16px">🎉</div>
-      <h2>评价计算完成！</h2>
-      <p class="text-light" style="margin:12px 0 24px">共评价 {{ results.length }} 个产品，消耗 {{ results.length }} 次积分</p>
+      <h2>{{ t('upload.done') }}</h2>
+      <p class="text-light" style="margin:12px 0 24px">{{ t('upload.doneSummary', { count: results.length }) }}</p>
       <div style="display:flex;gap:12px;justify-content:center;">
-        <el-button type="primary" size="large" @click="viewResults">📊 查看详细结果</el-button>
-        <el-button size="large" @click="$router.push('/dashboard')">返回首页</el-button>
+        <el-button type="primary" size="large" @click="viewResults">📊 {{ t('upload.viewResults') }}</el-button>
+        <el-button size="large" @click="$router.push('/dashboard')">{{ t('upload.backHome') }}</el-button>
       </div>
     </div>
   </div>
@@ -235,7 +235,7 @@ const UploadPage = {
         uploadId.value = res.upload_id;
         preview.value = res.preview;
         warnings.value = res.warnings || [];
-        ElementPlus.ElMessage.success('文件解析成功！');
+        ElementPlus.ElMessage.success(t('upload.parseSuccess'));
       } catch (e) {
         uploadProgress.value = 0;
         ElementPlus.ElMessage.error(e.message);
@@ -306,9 +306,9 @@ const UploadPage = {
           await api.post('/upload/images/batch', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
           });
-          ElementPlus.ElMessage.success(`${imageEntries.length} 张产品图片已上传`);
+          ElementPlus.ElMessage.success(t('upload.imagesUploaded', { count: imageEntries.length }));
         } catch (e) {
-          ElementPlus.ElMessage.warning('图片上传失败：' + e.message + '，将跳过图片继续');
+          ElementPlus.ElMessage.warning(t('upload.imageUploadFail') + '：' + e.message + t('upload.skipImages'));
         } finally {
           uploadingImages.value = false;
         }
@@ -325,7 +325,7 @@ const UploadPage = {
       step.value = 4;
       running.value = true;
       runProgress.value = 0;
-      runStatusText.value = '正在准备评价计算...';
+      runStatusText.value = t('upload.preparing');
 
       // Simulated progress timer
       let progressTimer = null;
@@ -356,7 +356,7 @@ const UploadPage = {
 
       try {
         // Phase 1: Algorithm calculation (0-20%, ~3 seconds)
-        startProgressTimer(0, 20, 3000, '正在运行 Random Forest 算法计算创意度...');
+        startProgressTimer(0, 20, 3000, t('upload.runningAlgorithm'));
 
         // Wait a moment then start phase 2
         await new Promise(r => setTimeout(r, 1500));
@@ -365,10 +365,10 @@ const UploadPage = {
           // Phase 2: LLM analysis (20-85%, estimated based on product count)
           const estimatedMs = selectedProducts.value.length * 8000; // ~8s per product
           stopTimer();
-          startProgressTimer(20, 85, estimatedMs, '正在调用 AI 分析消费者评论（这可能需要几分钟）...');
+          startProgressTimer(20, 85, estimatedMs, t('upload.runningLlm'));
         } else {
           stopTimer();
-          startProgressTimer(20, 85, 2000, '正在保存计算结果...');
+          startProgressTimer(20, 85, 2000, t('upload.savingResults'));
         }
 
         const res = await evalApi.run(uploadId.value, {
@@ -379,7 +379,7 @@ const UploadPage = {
         // Phase 3: Complete
         stopTimer();
         runProgress.value = 100;
-        runStatusText.value = '计算完成！';
+        runStatusText.value = t('upload.calcDone');
         results.value = res.results;
       } catch (e) {
         stopTimer();
@@ -400,7 +400,7 @@ const UploadPage = {
     };
 
     return {
-      step, fileInput, filename, preview, warnings, uploadId, uploadProgress,
+      t, step, fileInput, filename, preview, warnings, uploadId, uploadProgress,
       selectedProducts, runLlm, running, runProgress, runStatusText, results,
       userCredits, totalCost,
       productImages, productImagePreviews, uploadingImages,

@@ -3,10 +3,10 @@ const ResultsPage = {
   template: `
   <div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
-      <h2 style="font-size:22px">📊 评价结果</h2>
+      <h2 style="font-size:22px">📊 {{ t('results.title') }}</h2>
       <div style="display:flex;gap:10px;">
-        <el-button @click="$router.push('/upload')">📤 新评价</el-button>
-        <el-button type="primary" v-if="results.length > 0" @click="downloadReport">📥 下载报告</el-button>
+        <el-button @click="$router.push('/upload')">📤 {{ t('results.newEval') }}</el-button>
+        <el-button type="primary" v-if="results.length > 0" @click="downloadReport">📥 {{ t('results.downloadReport') }}</el-button>
       </div>
     </div>
 
@@ -21,20 +21,20 @@ const ResultsPage = {
         </div>
         <div v-else class="product-img" style="display:flex;align-items:center;justify-content:center;font-size:36px;background:#f0f2ff;cursor:pointer;" @click="openImageLibrary(r.product_id)">🏛️</div>
         <div style="flex:1">
-          <h2 style="font-size:20px;margin-bottom:8px;">产品 {{ r.product_id }}</h2>
+          <h2 style="font-size:20px;margin-bottom:8px;">{{ t('results.product') }} {{ r.product_id }}</h2>
           <p v-if="r.product_name" class="text-light">{{ r.product_name }}</p>
           <div style="margin-top:12px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-            <span class="creativity-score">创意值 {{ r.creativity_score?.toFixed(4) }}</span>
-            <span class="text-light" style="font-size:13px;">样本数：{{ r.sample_count }}</span>
+            <span class="creativity-score">{{ t('results.creativityScore') }} {{ r.creativity_score?.toFixed(4) }}</span>
+            <span class="text-light" style="font-size:13px;">{{ t('results.sampleCount') }}{{ r.sample_count }}</span>
             <el-button size="small" @click="openImageLibrary(r.product_id)" style="margin-left:auto">
-              📷 {{ r.product_image ? '更换图片' : '上传图片' }}
+              📷 {{ r.product_image ? t('results.changeImage') : t('results.uploadImage') }}
             </el-button>
           </div>
         </div>
       </div>
 
       <!-- Dimension Bars -->
-      <h3 style="font-size:15px;margin-bottom:14px;">五维度得分排名</h3>
+      <h3 style="font-size:15px;margin-bottom:14px;">{{ t('results.dimRanking') }}</h3>
       <div class="dimension-bars">
         <div v-for="(dim, dIdx) in getRankedDimensions(r)" :key="dim.key" class="dim-bar-row">
           <span class="dim-bar-label">{{ dim.label }}</span>
@@ -44,7 +44,7 @@ const ResultsPage = {
             </div>
           </div>
           <span class="dim-bar-value">
-            <span class="rank-badge" :class="'rank-' + (dIdx+1)">第{{ dIdx+1 }}名</span>
+            <span class="rank-badge" :class="'rank-' + (dIdx+1)">{{ t('results.rankN').replace('{0}', dim.rank) }}</span>
           </span>
         </div>
       </div>
@@ -56,20 +56,20 @@ const ResultsPage = {
 
       <!-- LLM Analysis -->
       <div v-if="r.llm_analysis" class="analysis-block">
-        <h3>🤖 AI 消费者洞察分析</h3>
+        <h3>🤖 {{ t('results.aiAnalysis') }}</h3>
         <div class="md-content" v-html="renderMarkdown(r.llm_analysis)"></div>
       </div>
 
       <div v-if="r.improvement_suggestions" class="suggestions-block">
-        <h3>💡 综合改进建议</h3>
+        <h3>💡 {{ t('results.suggestions') }}</h3>
         <div class="md-content" v-html="renderMarkdown(r.improvement_suggestions)"></div>
       </div>
     </div>
 
     <div v-if="!loading && results.length === 0" class="section-card text-center">
       <div style="font-size:48px;margin-bottom:16px">📭</div>
-      <p class="text-light">暂无评价结果</p>
-      <el-button type="primary" style="margin-top:16px" @click="$router.push('/upload')">开始评价</el-button>
+      <p class="text-light">{{ t('results.noResults') }}</p>
+      <el-button type="primary" style="margin-top:16px" @click="$router.push('/upload')">{{ t('results.startEval') }}</el-button>
     </div>
 
     <!-- Image Library Modal -->
@@ -88,11 +88,11 @@ const ResultsPage = {
     const maxScore = Vue.ref(1);
 
     const dimConfig = [
-      { key: 'Novelty', label: '新颖度', color: '#667eea' },
-      { key: 'Usefulness', label: '有用性', color: '#764ba2' },
-      { key: 'Affect', label: '情感性', color: '#f093fb' },
-      { key: 'Aesthetics', label: '设计美学', color: '#4facfe' },
-      { key: 'Cultural Values', label: '文化价值', color: '#43e97b' },
+      { key: 'Novelty', label: t('dim.novelty'), color: '#667eea' },
+      { key: 'Usefulness', label: t('dim.usefulness'), color: '#764ba2' },
+      { key: 'Affect', label: t('dim.affect'), color: '#f093fb' },
+      { key: 'Aesthetics', label: t('dim.aesthetics'), color: '#4facfe' },
+      { key: 'Cultural Values', label: t('dim.cultural'), color: '#43e97b' },
     ];
 
     const getRankedDimensions = (r) => {
@@ -114,7 +114,7 @@ const ResultsPage = {
         data: {
           labels,
           datasets: [{
-            label: '维度得分',
+            label: t('dim.scoreLabel'),
             data: scores,
             borderColor: '#667eea',
             backgroundColor: 'rgba(102,126,234,0.15)',
@@ -263,6 +263,6 @@ const ResultsPage = {
       refreshResults();
     };
 
-    return { results, loading, maxScore, dimConfig, getRankedDimensions, downloadReport, renderMarkdown, showImageLibrary, imageLibraryTargetProduct, openImageLibrary, refreshResults, onImageAssigned };
+    return { t, results, loading, maxScore, dimConfig, getRankedDimensions, downloadReport, renderMarkdown, showImageLibrary, imageLibraryTargetProduct, openImageLibrary, refreshResults, onImageAssigned };
   }
 };

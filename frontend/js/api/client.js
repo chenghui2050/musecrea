@@ -6,12 +6,13 @@ const api = axios.create({
   timeout: 120000, // 2 min for LLM calls
 });
 
-// Request interceptor - add auth token
+// Request interceptor - add auth token & lang header
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('musecrea_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  config.headers['X-Lang'] = MuseCreaI18n.current;
   return config;
 });
 
@@ -25,10 +26,10 @@ api.interceptors.response.use(
         localStorage.removeItem('musecrea_user');
         window.location.hash = '#/login';
       }
-      const msg = error.response.data?.detail || '请求失败';
+      const msg = error.response.data?.detail || t('common.requestFailed');
       return Promise.reject(new Error(msg));
     }
-    return Promise.reject(new Error('网络连接失败'));
+    return Promise.reject(new Error(t('common.networkError')));
   }
 );
 
@@ -97,11 +98,11 @@ const evalApi = {
 const reportApi = {
   generate: (evalId) => {
     const token = localStorage.getItem('musecrea_token');
-    return `${API_BASE}/report/generate/${evalId}?token=${encodeURIComponent(token || '')}`;
+    return `${API_BASE}/report/generate/${evalId}?token=${encodeURIComponent(token || '')}&lang=${MuseCreaI18n.current}`;
   },
   download: (evalId) => {
     const token = localStorage.getItem('musecrea_token');
-    return `${API_BASE}/report/download/${evalId}?token=${encodeURIComponent(token || '')}`;
+    return `${API_BASE}/report/download/${evalId}?token=${encodeURIComponent(token || '')}&lang=${MuseCreaI18n.current}`;
   },
 };
 
@@ -154,6 +155,17 @@ const DIM_LABELS = {
   'Aesthetics': '设计美学',
   'Cultural Values': '文化价值',
 };
+
+function getDimLabel(dim) {
+  const map = {
+    'Novelty': t('dim.novelty'),
+    'Usefulness': t('dim.usefulness'),
+    'Affect': t('dim.affect'),
+    'Aesthetics': t('dim.aesthetics'),
+    'Cultural Values': t('dim.cultural'),
+  };
+  return map[dim] || dim;
+}
 
 const DIM_COLORS = {
   'Novelty': '#667eea',

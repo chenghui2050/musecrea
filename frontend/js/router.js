@@ -6,35 +6,45 @@ const LandingPage = {
   template: `
   <div class="landing">
     <h1>MuseCrea</h1>
-    <p class="tagline">博物馆文创产品创意评价计算平台 —— 基于随机森林算法与大语言模型，为文创产品提供专业、量化的创意度评估与消费者洞察分析</p>
+    <p class="tagline">{{ t('landing.tagline') }}</p>
     <div class="features">
       <div class="feature-card">
         <div class="icon">📊</div>
-        <h3>多维量化评价</h3>
-        <p>新颖度、有用性、情感性、设计美学、文化价值五维综合评估</p>
+        <h3>{{ t('landing.feat1.title') }}</h3>
+        <p>{{ t('landing.feat1.desc') }}</p>
       </div>
       <div class="feature-card">
         <div class="icon">🤖</div>
-        <h3>AI 智能分析</h3>
-        <p>通义千问大模型深度分析消费者评论，生成改进建议</p>
+        <h3>{{ t('landing.feat2.title') }}</h3>
+        <p>{{ t('landing.feat2.desc') }}</p>
       </div>
       <div class="feature-card">
         <div class="icon">📈</div>
-        <h3>可视化报告</h3>
-        <p>雷达图、维度排名、综合评分，一目了然的评价结果</p>
+        <h3>{{ t('landing.feat3.title') }}</h3>
+        <p>{{ t('landing.feat3.desc') }}</p>
       </div>
       <div class="feature-card">
         <div class="icon">🔒</div>
-        <h3>安全可靠</h3>
-        <p>数据加密传输，评价历史云端存储，随时追溯对比</p>
+        <h3>{{ t('landing.feat4.title') }}</h3>
+        <p>{{ t('landing.feat4.desc') }}</p>
       </div>
     </div>
     <div class="cta-buttons">
-      <button class="cta-btn cta-primary" onclick="location.hash='#/register'">立即注册</button>
-      <button class="cta-btn cta-secondary" onclick="location.hash='#/login'">已有账号？登录</button>
+      <button class="cta-btn cta-primary" onclick="location.hash='#/register'">{{ t('landing.register') }}</button>
+      <button class="cta-btn cta-secondary" onclick="location.hash='#/login'">{{ t('landing.login') }}</button>
+    </div>
+    <div style="position:absolute;top:20px;right:20px;">
+      <button @click="toggleLang" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;">{{ currentLang === 'zh' ? 'English' : '中文' }}</button>
     </div>
   </div>
-  `
+  `,
+  setup() {
+    const currentLang = Vue.ref(MuseCreaI18n.current);
+    const toggleLang = () => {
+      MuseCreaI18n.setLocale(currentLang.value === 'zh' ? 'en' : 'zh');
+    };
+    return { t, currentLang, toggleLang };
+  }
 };
 
 // Auth guard

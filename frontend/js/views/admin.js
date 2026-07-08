@@ -6,23 +6,23 @@ const AdminPage = {
     <div class="admin-stat-grid">
       <div class="admin-stat">
         <div class="value">{{ stats.total_users || 0 }}</div>
-        <div class="label">注册用户总数</div>
+        <div class="label">{{ t('admin.totalUsers') }}</div>
       </div>
       <div class="admin-stat">
         <div class="value">{{ stats.total_evaluations || 0 }}</div>
-        <div class="label">累计评价次数</div>
+        <div class="label">{{ t('admin.totalEvals') }}</div>
       </div>
       <div class="admin-stat">
         <div class="value">¥{{ (stats.total_revenue || 0).toFixed(2) }}</div>
-        <div class="label">累计收入</div>
+        <div class="label">{{ t('admin.totalRevenue') }}</div>
       </div>
       <div class="admin-stat">
         <div class="value">{{ stats.api_calls_today || 0 }}</div>
-        <div class="label">今日API调用</div>
+        <div class="label">{{ t('admin.todayApi') }}</div>
       </div>
       <div class="admin-stat">
         <div class="value">{{ stats.active_users_today || 0 }}</div>
-        <div class="label">今日活跃用户</div>
+        <div class="label">{{ t('admin.todayActive') }}</div>
       </div>
     </div>
 
@@ -30,53 +30,53 @@ const AdminPage = {
     <div class="section-card">
       <el-tabs v-model="activeTab">
         <!-- Users Tab -->
-        <el-tab-pane label="用户管理" name="users">
+        <el-tab-pane :label="t('admin.userMgmt')" name="users">
           <el-table :data="users" stripe style="width:100%">
-            <el-table-column prop="username" label="用户名" width="120" />
-            <el-table-column prop="email" label="邮箱" width="180" />
-            <el-table-column prop="full_name" label="姓名" width="100" />
-            <el-table-column prop="role" label="角色" width="80">
+            <el-table-column prop="username" :label="t('admin.username')" width="120" />
+            <el-table-column prop="email" :label="t('admin.email')" width="180" />
+            <el-table-column prop="full_name" :label="t('admin.fullName')" width="100" />
+            <el-table-column prop="role" :label="t('admin.role')" width="80">
               <template #default="{ row }">
                 <el-tag :type="row.role === 'admin' ? 'danger' : 'info'" size="small">{{ row.role }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="credits" label="积分" width="80" />
-            <el-table-column prop="evaluation_count" label="评价次数" width="90" />
-            <el-table-column label="状态" width="80">
+            <el-table-column prop="credits" :label="t('admin.credits')" width="80" />
+            <el-table-column prop="evaluation_count" :label="t('admin.evalCount')" width="90" />
+            <el-table-column :label="t('admin.status')" width="80">
               <template #default="{ row }">
                 <el-tag :type="row.is_active ? 'success' : 'danger'" size="small">
-                  {{ row.is_active ? '正常' : '禁用' }}
+                  {{ row.is_active ? t('admin.statusActive') : t('admin.statusDisabled') }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="200" fixed="right">
+            <el-table-column :label="t('admin.actions')" width="200" fixed="right">
               <template #default="{ row }">
                 <el-button link size="small" :type="row.is_active ? 'danger' : 'success'" @click="toggleUser(row)">
-                  {{ row.is_active ? '禁用' : '启用' }}
+                  {{ row.is_active ? t('admin.disable') : t('admin.enable') }}
                 </el-button>
-                <el-button link size="small" type="primary" @click="editCredits(row)">调整积分</el-button>
+                <el-button link size="small" type="primary" @click="editCredits(row)">{{ t('admin.adjustCredits') }}</el-button>
               </template>
             </el-table-column>
           </el-table>
         </el-tab-pane>
 
         <!-- API Logs Tab -->
-        <el-tab-pane label="API调用日志" name="logs">
+        <el-tab-pane :label="t('admin.apiLogs')" name="logs">
           <el-table :data="logs" stripe style="width:100%">
-            <el-table-column prop="user" label="用户" width="120" />
-            <el-table-column prop="product_id" label="产品ID" width="100" />
-            <el-table-column label="创意值" width="100">
+            <el-table-column prop="user" :label="t('admin.user')" width="120" />
+            <el-table-column prop="product_id" :label="t('admin.productId')" width="100" />
+            <el-table-column :label="t('admin.creativity')" width="100">
               <template #default="{ row }">
                 <span style="font-weight:600;color:#667eea;">{{ row.creativity_score?.toFixed(4) }}</span>
               </template>
             </el-table-column>
-            <el-table-column prop="sample_count" label="样本数" width="80" />
-            <el-table-column label="LLM分析" width="80">
+            <el-table-column prop="sample_count" :label="t('admin.sampleCount')" width="80" />
+            <el-table-column :label="t('admin.llmAnalysis')" width="80">
               <template #default="{ row }">
-                <el-tag :type="row.has_llm ? 'success' : 'info'" size="small">{{ row.has_llm ? '是' : '否' }}</el-tag>
+                <el-tag :type="row.has_llm ? 'success' : 'info'" size="small">{{ row.has_llm ? t('admin.yes') : t('admin.no') }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="时间" width="160">
+            <el-table-column :label="t('admin.time')" width="160">
               <template #default="{ row }">
                 <span style="font-size:12px;">{{ row.created_at }}</span>
               </template>
@@ -85,26 +85,26 @@ const AdminPage = {
         </el-tab-pane>
 
         <!-- Coupons Tab -->
-        <el-tab-pane label="券码管理" name="coupons">
+        <el-tab-pane :label="t('admin.couponMgmt')" name="coupons">
           <div style="margin-bottom:16px;display:flex;justify-content:space-between;">
-            <h3 style="font-size:16px">优惠券列表</h3>
-            <el-button type="primary" @click="showCouponDialog = true">+ 创建券码</el-button>
+            <h3 style="font-size:16px">{{ t('admin.couponList') }}</h3>
+            <el-button type="primary" @click="showCouponDialog = true">{{ t('admin.createCoupon') }}</el-button>
           </div>
           <el-table :data="coupons" stripe style="width:100%">
-            <el-table-column prop="code" label="券码" width="160" />
-            <el-table-column prop="discount_type" label="类型" width="140" />
-            <el-table-column prop="credits_value" label="赠送次数" width="90" />
-            <el-table-column label="使用次数" width="100">
+            <el-table-column prop="code" :label="t('admin.couponCode')" width="160" />
+            <el-table-column prop="discount_type" :label="t('admin.type')" width="140" />
+            <el-table-column prop="credits_value" :label="t('admin.creditsValue')" width="90" />
+            <el-table-column :label="t('admin.useCount')" width="100">
               <template #default="{ row }">{{ row.used_count }} / {{ row.max_uses }}</template>
             </el-table-column>
-            <el-table-column label="状态" width="80">
+            <el-table-column :label="t('admin.status')" width="80">
               <template #default="{ row }">
-                <el-tag :type="row.is_active ? 'success' : 'info'" size="small">{{ row.is_active ? '有效' : '已用完' }}</el-tag>
+                <el-tag :type="row.is_active ? 'success' : 'info'" size="small">{{ row.is_active ? t('admin.couponValid') : t('admin.couponUsedUp') }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="80">
+            <el-table-column :label="t('admin.actions')" width="80">
               <template #default="{ row }">
-                <el-button link size="small" type="danger" @click="deleteCoupon(row)">删除</el-button>
+                <el-button link size="small" type="danger" @click="deleteCoupon(row)">{{ t('admin.delete') }}</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -113,28 +113,28 @@ const AdminPage = {
     </div>
 
     <!-- Create Coupon Dialog -->
-    <el-dialog v-model="showCouponDialog" title="创建优惠券码" width="450px">
+    <el-dialog v-model="showCouponDialog" :title="t('admin.createCouponTitle')" width="450px">
       <el-form :model="newCoupon" label-width="100px">
-        <el-form-item label="券码">
-          <el-input v-model="newCoupon.code" placeholder="如：MUSECREA2025" />
+        <el-form-item :label="t('admin.couponCode')">
+          <el-input v-model="newCoupon.code" :placeholder="t('admin.couponCodePlaceholder')" />
         </el-form-item>
-        <el-form-item label="类型">
+        <el-form-item :label="t('admin.type')">
           <el-select v-model="newCoupon.discount_type" style="width:100%">
-            <el-option label="免费评价" value="free_evaluation" />
-            <el-option label="折扣百分比" value="discount_percent" />
-            <el-option label="免费订阅" value="free_subscription" />
+            <el-option :label="t('admin.freeEval')" value="free_evaluation" />
+            <el-option :label="t('admin.discountPercent')" value="discount_percent" />
+            <el-option :label="t('admin.freeSubscription')" value="free_subscription" />
           </el-select>
         </el-form-item>
-        <el-form-item label="赠送次数">
+        <el-form-item :label="t('admin.creditsValue')">
           <el-input-number v-model="newCoupon.credits_value" :min="1" :max="100" />
         </el-form-item>
-        <el-form-item label="最大使用次数">
+        <el-form-item :label="t('admin.maxUses')">
           <el-input-number v-model="newCoupon.max_uses" :min="1" :max="1000" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="showCouponDialog = false">取消</el-button>
-        <el-button type="primary" :loading="couponLoading" @click="createCoupon">创建</el-button>
+        <el-button @click="showCouponDialog = false">{{ t('admin.cancel') }}</el-button>
+        <el-button type="primary" :loading="couponLoading" @click="createCoupon">{{ t('admin.create') }}</el-button>
       </template>
     </el-dialog>
   </div>
@@ -161,7 +161,7 @@ const AdminPage = {
         const couponsRes = await adminApi.getCoupons(1);
         coupons.value = couponsRes.coupons;
       } catch (e) {
-        ElementPlus.ElMessage.error('加载管理数据失败: ' + e.message);
+        ElementPlus.ElMessage.error(t('admin.loadFailed') + ': ' + e.message);
       }
     });
 
@@ -169,20 +169,20 @@ const AdminPage = {
       try {
         await adminApi.toggleUser(user.id);
         user.is_active = !user.is_active;
-        ElementPlus.ElMessage.success(user.is_active ? '已启用' : '已禁用');
+        ElementPlus.ElMessage.success(user.is_active ? t('admin.enabled') : t('admin.disabled'));
       } catch (e) { ElementPlus.ElMessage.error(e.message); }
     };
 
     const editCredits = async (user) => {
-      ElementPlus.ElMessageBox.prompt('请输入新的积分数量', '调整积分', {
+      ElementPlus.ElMessageBox.prompt(t('admin.enterNewCredits'), t('admin.adjustCredits'), {
         inputValue: String(user.credits),
         inputPattern: /^\d+$/,
-        inputErrorMessage: '请输入有效数字',
+        inputErrorMessage: t('admin.invalidNumber'),
       }).then(async ({ value }) => {
         try {
           await adminApi.updateCredits(user.id, parseInt(value));
           user.credits = parseInt(value);
-          ElementPlus.ElMessage.success('积分已更新');
+          ElementPlus.ElMessage.success(t('admin.creditsUpdated'));
         } catch (e) { ElementPlus.ElMessage.error(e.message); }
       }).catch(() => {});
     };
@@ -193,20 +193,20 @@ const AdminPage = {
         const res = await adminApi.createCoupon(newCoupon);
         coupons.value.unshift(res);
         showCouponDialog.value = false;
-        ElementPlus.ElMessage.success('券码创建成功');
+        ElementPlus.ElMessage.success(t('admin.couponCreated'));
       } catch (e) { ElementPlus.ElMessage.error(e.message); }
       finally { couponLoading.value = false; }
     };
 
     const deleteCoupon = async (coupon) => {
       try {
-        await ElementPlus.ElMessageBox.confirm('确定删除此券码？');
+        await ElementPlus.ElMessageBox.confirm(t('admin.confirmDeleteCoupon'));
         await adminApi.deleteCoupon(coupon.id);
         coupons.value = coupons.value.filter(c => c.id !== coupon.id);
-        ElementPlus.ElMessage.success('已删除');
+        ElementPlus.ElMessage.success(t('admin.deleted'));
       } catch (e) { if (e !== 'cancel') ElementPlus.ElMessage.error(e.message); }
     };
 
-    return { stats, users, logs, coupons, activeTab, showCouponDialog, couponLoading, newCoupon, toggleUser, editCredits, createCoupon, deleteCoupon };
+    return { stats, users, logs, coupons, activeTab, showCouponDialog, couponLoading, newCoupon, toggleUser, editCredits, createCoupon, deleteCoupon, t };
   }
 };

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from typing import Dict, List, Tuple
+from app.core.i18n import msg
 
 
 # 五维度列名映射（与原代码一致）
@@ -24,21 +25,21 @@ DIMENSION_LABELS_EN = {
 }
 
 
-def validate_dataframe(df: pd.DataFrame) -> Tuple[bool, str]:
+def validate_dataframe(df: pd.DataFrame, lang: str = "zh") -> Tuple[bool, str]:
     """验证上传的Excel数据格式"""
     required_columns = ['Product ID'] + DIMENSION_COLUMNS
     missing = [c for c in required_columns if c not in df.columns]
     if missing:
-        return False, f"缺少必要列: {', '.join(missing)}"
+        return False, msg("data.missing_columns", lang, ", ".join(missing))
 
     # 检查数值列是否为数值类型
     for col in DIMENSION_COLUMNS:
         if not pd.api.types.is_numeric_dtype(df[col]):
-            return False, f"列 '{col}' 包含非数值数据"
+            return False, msg("data.non_numeric", lang, col)
 
     # 检查 Product ID 是否有空值
     if df['Product ID'].isna().all():
-        return False, "Product ID 列全部为空"
+        return False, msg("data.empty_product_ids", lang)
 
     return True, "数据格式正确"
 
