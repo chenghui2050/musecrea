@@ -98,11 +98,11 @@ const evalApi = {
 const reportApi = {
   generate: (evalId) => {
     const token = localStorage.getItem('musecrea_token');
-    return `${API_BASE}/report/generate/${evalId}?token=${encodeURIComponent(token || '')}`;
+    return `${API_BASE}/report/generate/${evalId}?token=${encodeURIComponent(token || '')}&lang=${MuseCreaI18n.current}`;
   },
   download: (evalId) => {
     const token = localStorage.getItem('musecrea_token');
-    return `${API_BASE}/report/download/${evalId}?token=${encodeURIComponent(token || '')}`;
+    return `${API_BASE}/report/download/${evalId}?token=${encodeURIComponent(token || '')}&lang=${MuseCreaI18n.current}`;
   },
 };
 
