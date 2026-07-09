@@ -6,7 +6,7 @@ from app.schemas import EvaluationRequest, EvaluationResponse, EvaluationResult
 from app.core.security import get_current_user
 from app.services.creativity import calculate_creativity_scores, extract_comments, detect_data_language
 from app.services.creativity import DIMENSION_LABELS_ZH, DIMENSION_LABELS_EN
-from app.services.llm_service import analyze_comments_batch, translate_text
+from app.services.llm_service import analyze_comments_batch
 from app.services.billing import deduct_credits, estimate_cost
 from app.core.i18n import msg, get_request_lang
 from app.api.upload import get_uploaded_data, find_product_image
@@ -87,25 +87,6 @@ def run_evaluation(
         # 根据数据语言选择维度排名标签
         dim_ranking_labels = [dim_labels.get(d, d) for d in score_data['dimension_ranking']]
 
-        # 准备双语内容：原始语言 + 翻译后的另一语言
-        analysis_text = llm_result.get('analysis', '')
-        suggestions_text = llm_result.get('suggestions', '')
-        analysis_zh = analysis_en = suggestions_zh = suggestions_en = None
-        if analysis_text or suggestions_text:
-            other_lang = 'en' if data_lang == 'zh' else 'zh'
-            if analysis_text:
-                translated_analysis = translate_text(analysis_text, data_lang, other_lang)
-                if data_lang == 'zh':
-                    analysis_zh, analysis_en = analysis_text, translated_analysis
-                else:
-                    analysis_zh, analysis_en = translated_analysis, analysis_text
-            if suggestions_text:
-                translated_suggestions = translate_text(suggestions_text, data_lang, other_lang)
-                if data_lang == 'zh':
-                    suggestions_zh, suggestions_en = suggestions_text, translated_suggestions
-                else:
-                    suggestions_zh, suggestions_en = translated_suggestions, suggestions_text
-
         evaluation = Evaluation(
             user_id=current_user.id,
             product_id=product.id,
@@ -116,12 +97,8 @@ def run_evaluation(
             cultural_value_score=score_data['dimension_scores'].get('Cultural Values', 0),
             creativity_score=score_data['creativity_score'],
             dimension_ranking=json.dumps(dim_ranking_labels),
-            llm_analysis=analysis_text,
-            improvement_suggestions=suggestions_text,
-            llm_analysis_zh=analysis_zh,
-            llm_analysis_en=analysis_en,
-            suggestions_zh=suggestions_zh,
-            suggestions_en=suggestions_en,
+            llm_analysis=llm_result.get('analysis', ''),
+            improvement_suggestions=llm_result.get('suggestions', ''),
             sample_count=score_data['sample_count'],
             raw_data_path=data['file_path'],
             data_language=data_lang,
@@ -216,9 +193,9 @@ def get_evaluation_detail(
             e.product.image_url = product_image
             db.commit()
 
-    # Read from bilingual columns — instant, no LLM call needed
-    llm_analysis = getattr(e, f'llm_analysis_{lang}', None) or e.llm_analysis or ''
-    improvement_suggestions = getattr(e, f'suggestions_{lang}', None) or e.improvement_suggestions or ''
+    # 报告内容语言跟随数据集语言，无需翻译
+    llm_analysis = e.llm_analysis or ''
+    improvement_suggestions = e.improvement_suggestions or ''
 
     return {
         'id': e.id,

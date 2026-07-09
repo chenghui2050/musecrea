@@ -326,9 +326,9 @@ def download_report(
         if os.path.isfile(candidate):
             image_path = candidate
 
-    # 直接从双语字段读取对应语言内容，无需运行时翻译
-    llm_analysis = getattr(e, f'llm_analysis_{lang}', None) or e.llm_analysis or ''
-    improvement_suggestions = getattr(e, f'suggestions_{lang}', None) or e.improvement_suggestions or ''
+    # 报告内容语言跟随数据集语言，无需翻译
+    llm_analysis = e.llm_analysis or ''
+    improvement_suggestions = e.improvement_suggestions or ''
 
     product_data = {
         'product_id': product.product_id if product else 'N/A',
@@ -742,7 +742,7 @@ def _generate_pdf(products: list, lang: str = 'zh') -> FPDF:
 
 
 def _render_report(evaluations, db, lang: str = 'zh'):
-    """渲染报告HTML — 直接从双语字段读取，无需运行时翻译"""
+    """渲染报告HTML — 内容语言跟随数据集，UI标签跟随请求语言"""
     tr = REPORT_I18N.get(lang, REPORT_I18N['zh'])
     products = []
     max_score = 1  # 防止除零
@@ -776,9 +776,9 @@ def _render_report(evaluations, db, lang: str = 'zh'):
                 'color': dim_colors.get(dim, '#999'),
             }))
 
-        # 直接从双语字段读取对应语言的内容
-        llm_analysis = getattr(e, f'llm_analysis_{lang}', None) or e.llm_analysis or ''
-        improvement_suggestions = getattr(e, f'suggestions_{lang}', None) or e.improvement_suggestions or ''
+        # 报告内容语言跟随数据集语言，无需翻译
+        llm_analysis = e.llm_analysis or ''
+        improvement_suggestions = e.improvement_suggestions or ''
 
         products.append({
             'product_id': product.product_id if product else 'N/A',
