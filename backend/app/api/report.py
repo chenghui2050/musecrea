@@ -9,7 +9,6 @@ from app.database import get_db
 from app.models import User, Evaluation, Report, Product
 from app.core.security import get_current_user, decode_token
 from app.core.i18n import msg, get_request_lang
-from app.services.llm_service import translate_text
 from app.config import settings
 from jinja2 import Template
 from datetime import datetime
@@ -230,59 +229,6 @@ def _get_current_user_with_token(request: Request, db: Session = Depends(get_db)
     return user
 
 
-LOADING_PAGE_HTML = """<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Preparing Report...</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: white;
-  }
-  .container { text-align: center; padding: 40px; }
-  .spinner {
-    width: 48px; height: 48px; margin: 0 auto 30px;
-    border: 4px solid rgba(255,255,255,0.3); border-top-color: white;
-    border-radius: 50%; animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  h1 { font-size: 22px; font-weight: 500; margin-bottom: 12px; }
-  p { font-size: 15px; opacity: 0.85; line-height: 1.6; }
-  .dots::after { content: ''; animation: dots 1.5s steps(4,end) infinite; }
-  @keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
-</style>
-</head>
-<body>
-<div class="container">
-  <div class="spinner"></div>
-  <h1>Please wait while we prepare your report<span class="dots"></span></h1>
-  <p>The English version is being generated. This may take a few seconds.</p>
-</div>
-<script>
-  // Redirect to the actual report after a short delay
-  const target = new URLSearchParams(window.location.search).get('url');
-  if (target) {
-    setTimeout(() => { window.location.replace(target); }, 800);
-  }
-</script>
-</body>
-</html>"""
-
-
-@router.get("/loading")
-def report_loading_page(
-    url: str = Query(default=None),
-    request: Request = None,
-):
-    """Loading page shown while report is being translated."""
-    return HTMLResponse(content=LOADING_PAGE_HTML)
-
-
 @router.get("/generate/batch")
 def generate_batch_report(
     evaluation_ids: str,
@@ -380,14 +326,9 @@ def download_report(
         if os.path.isfile(candidate):
             image_path = candidate
 
-    # Translate LLM content if data language differs from report language
-    llm_analysis = e.llm_analysis or ''
-    improvement_suggestions = e.improvement_suggestions or ''
-    data_lang = getattr(e, 'data_language', None) or 'zh'
-    if data_lang != lang and llm_analysis:
-        llm_analysis = translate_text(llm_analysis, data_lang, lang)
-    if data_lang != lang and improvement_suggestions:
-        improvement_suggestions = translate_text(improvement_suggestions, data_lang, lang)
+    # 直接从双语字段读取对应语言内容，无需运行时翻译
+    llm_analysis = getattr(e, f'llm_analysis_{lang}', None) or e.llm_analysis or ''
+    improvement_suggestions = getattr(e, f'suggestions_{lang}', None) or e.improvement_suggestions or ''
 
     product_data = {
         'product_id': product.product_id if product else 'N/A',
@@ -409,13 +350,8 @@ def download_report(
     pdf = _generate_pdf([product_data], lang=lang)
     pdf.output(filepath)
 
-    # Save report record (reuse already-translated content)
-    html_snippet = _render_report([e], db, lang=lang, translations={
-        e.id: {
-            'llm_analysis': llm_analysis,
-            'improvement_suggestions': improvement_suggestions,
-        }
-    })
+    # Save report record
+    html_snippet = _render_report([e], db, lang=lang)
     report = Report(
         evaluation_id=evaluation_id,
         report_type="pdf",
@@ -805,16 +741,8 @@ def _generate_pdf(products: list, lang: str = 'zh') -> FPDF:
     return pdf
 
 
-def _render_report(evaluations, db, lang: str = 'zh', translations: dict = None):
-    """渲染报告HTML
-
-    Args:
-        evaluations: list of Evaluation objects
-        db: database session
-        lang: report language
-        translations: optional dict of {eval_id: {'llm_analysis': str, 'improvement_suggestions': str}}
-                      to use pre-translated content and skip redundant LLM calls
-    """
+def _render_report(evaluations, db, lang: str = 'zh'):
+    """渲染报告HTML — 直接从双语字段读取，无需运行时翻译"""
     tr = REPORT_I18N.get(lang, REPORT_I18N['zh'])
     products = []
     max_score = 1  # 防止除零
@@ -848,18 +776,9 @@ def _render_report(evaluations, db, lang: str = 'zh', translations: dict = None)
                 'color': dim_colors.get(dim, '#999'),
             }))
 
-        # Translate LLM content if data language differs from report language
-        llm_analysis = e.llm_analysis or ''
-        improvement_suggestions = e.improvement_suggestions or ''
-        data_lang = getattr(e, 'data_language', None) or 'zh'
-        if translations and e.id in translations:
-            llm_analysis = translations[e.id].get('llm_analysis', llm_analysis)
-            improvement_suggestions = translations[e.id].get('improvement_suggestions', improvement_suggestions)
-        elif data_lang != lang:
-            if llm_analysis:
-                llm_analysis = translate_text(llm_analysis, data_lang, lang)
-            if improvement_suggestions:
-                improvement_suggestions = translate_text(improvement_suggestions, data_lang, lang)
+        # 直接从双语字段读取对应语言的内容
+        llm_analysis = getattr(e, f'llm_analysis_{lang}', None) or e.llm_analysis or ''
+        improvement_suggestions = getattr(e, f'suggestions_{lang}', None) or e.improvement_suggestions or ''
 
         products.append({
             'product_id': product.product_id if product else 'N/A',

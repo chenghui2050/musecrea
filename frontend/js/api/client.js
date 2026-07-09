@@ -98,12 +98,7 @@ const evalApi = {
 const reportApi = {
   generate: (evalId) => {
     const token = localStorage.getItem('musecrea_token');
-    const reportUrl = `${API_BASE}/report/generate/${evalId}?token=${encodeURIComponent(token || '')}&lang=${MuseCreaI18n.current}`;
-    // In EN mode, show loading page first while translation happens
-    if (MuseCreaI18n.current === 'en') {
-      return `${API_BASE}/report/loading?url=${encodeURIComponent(reportUrl)}`;
-    }
-    return reportUrl;
+    return `${API_BASE}/report/generate/${evalId}?token=${encodeURIComponent(token || '')}&lang=${MuseCreaI18n.current}`;
   },
   download: (evalId) => {
     const token = localStorage.getItem('musecrea_token');

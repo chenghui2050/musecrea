@@ -54,8 +54,12 @@ class Evaluation(Base):
     cultural_value_score = Column(Float)
     creativity_score = Column(Float)
     dimension_ranking = Column(Text)  # JSON: ranked dimension names
-    llm_analysis = Column(Text)  # LLM generated analysis
-    improvement_suggestions = Column(Text)  # LLM generated suggestions
+    llm_analysis = Column(Text)  # LLM generated analysis (in data_language)
+    improvement_suggestions = Column(Text)  # LLM generated suggestions (in data_language)
+    llm_analysis_zh = Column(Text)  # Chinese version of analysis
+    llm_analysis_en = Column(Text)  # English version of analysis
+    suggestions_zh = Column(Text)  # Chinese version of suggestions
+    suggestions_en = Column(Text)  # English version of suggestions
     sample_count = Column(Integer)
     raw_data_path = Column(String(500))  # uploaded file path
     data_language = Column(String(5), default='zh')  # 'zh' or 'en' — language of the source data

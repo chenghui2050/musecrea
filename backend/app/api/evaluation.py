@@ -86,6 +86,26 @@ def run_evaluation(
         llm_result = llm_results.get(pid, {})
         # 根据数据语言选择维度排名标签
         dim_ranking_labels = [dim_labels.get(d, d) for d in score_data['dimension_ranking']]
+
+        # 准备双语内容：原始语言 + 翻译后的另一语言
+        analysis_text = llm_result.get('analysis', '')
+        suggestions_text = llm_result.get('suggestions', '')
+        analysis_zh = analysis_en = suggestions_zh = suggestions_en = None
+        if analysis_text or suggestions_text:
+            other_lang = 'en' if data_lang == 'zh' else 'zh'
+            if analysis_text:
+                translated_analysis = translate_text(analysis_text, data_lang, other_lang)
+                if data_lang == 'zh':
+                    analysis_zh, analysis_en = analysis_text, translated_analysis
+                else:
+                    analysis_zh, analysis_en = translated_analysis, analysis_text
+            if suggestions_text:
+                translated_suggestions = translate_text(suggestions_text, data_lang, other_lang)
+                if data_lang == 'zh':
+                    suggestions_zh, suggestions_en = suggestions_text, translated_suggestions
+                else:
+                    suggestions_zh, suggestions_en = translated_suggestions, suggestions_text
+
         evaluation = Evaluation(
             user_id=current_user.id,
             product_id=product.id,
@@ -96,8 +116,12 @@ def run_evaluation(
             cultural_value_score=score_data['dimension_scores'].get('Cultural Values', 0),
             creativity_score=score_data['creativity_score'],
             dimension_ranking=json.dumps(dim_ranking_labels),
-            llm_analysis=llm_result.get('analysis', ''),
-            improvement_suggestions=llm_result.get('suggestions', ''),
+            llm_analysis=analysis_text,
+            improvement_suggestions=suggestions_text,
+            llm_analysis_zh=analysis_zh,
+            llm_analysis_en=analysis_en,
+            suggestions_zh=suggestions_zh,
+            suggestions_en=suggestions_en,
             sample_count=score_data['sample_count'],
             raw_data_path=data['file_path'],
             data_language=data_lang,
@@ -192,15 +216,9 @@ def get_evaluation_detail(
             e.product.image_url = product_image
             db.commit()
 
-    # Translate LLM content if requested language differs from data language
-    data_lang = getattr(e, 'data_language', None) or 'zh'
-    llm_analysis = e.llm_analysis
-    improvement_suggestions = e.improvement_suggestions
-    if data_lang != lang:
-        if llm_analysis:
-            llm_analysis = translate_text(llm_analysis, data_lang, lang)
-        if improvement_suggestions:
-            improvement_suggestions = translate_text(improvement_suggestions, data_lang, lang)
+    # Read from bilingual columns — instant, no LLM call needed
+    llm_analysis = getattr(e, f'llm_analysis_{lang}', None) or e.llm_analysis or ''
+    improvement_suggestions = getattr(e, f'suggestions_{lang}', None) or e.improvement_suggestions or ''
 
     return {
         'id': e.id,
