@@ -6,7 +6,7 @@ from app.schemas import EvaluationRequest, EvaluationResponse, EvaluationResult
 from app.core.security import get_current_user
 from app.services.creativity import calculate_creativity_scores, extract_comments, detect_data_language
 from app.services.creativity import DIMENSION_LABELS_ZH, DIMENSION_LABELS_EN
-from app.services.llm_service import analyze_comments_batch
+from app.services.llm_service import analyze_comments_batch, translate_text
 from app.services.billing import deduct_credits, estimate_cost
 from app.core.i18n import msg, get_request_lang
 from app.api.upload import get_uploaded_data, find_product_image
@@ -192,6 +192,16 @@ def get_evaluation_detail(
             e.product.image_url = product_image
             db.commit()
 
+    # Translate LLM content if requested language differs from data language
+    data_lang = getattr(e, 'data_language', None) or 'zh'
+    llm_analysis = e.llm_analysis
+    improvement_suggestions = e.improvement_suggestions
+    if data_lang != lang:
+        if llm_analysis:
+            llm_analysis = translate_text(llm_analysis, data_lang, lang)
+        if improvement_suggestions:
+            improvement_suggestions = translate_text(improvement_suggestions, data_lang, lang)
+
     return {
         'id': e.id,
         'product_id': e.product.product_id if e.product else 'N/A',
@@ -207,7 +217,7 @@ def get_evaluation_detail(
         },
         'dimension_ranking': json.loads(e.dimension_ranking) if e.dimension_ranking else [],
         'sample_count': e.sample_count,
-        'llm_analysis': e.llm_analysis,
-        'improvement_suggestions': e.improvement_suggestions,
+        'llm_analysis': llm_analysis,
+        'improvement_suggestions': improvement_suggestions,
         'created_at': str(e.created_at),
     }
