@@ -230,6 +230,59 @@ def _get_current_user_with_token(request: Request, db: Session = Depends(get_db)
     return user
 
 
+LOADING_PAGE_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preparing Report...</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: white;
+  }
+  .container { text-align: center; padding: 40px; }
+  .spinner {
+    width: 48px; height: 48px; margin: 0 auto 30px;
+    border: 4px solid rgba(255,255,255,0.3); border-top-color: white;
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  h1 { font-size: 22px; font-weight: 500; margin-bottom: 12px; }
+  p { font-size: 15px; opacity: 0.85; line-height: 1.6; }
+  .dots::after { content: ''; animation: dots 1.5s steps(4,end) infinite; }
+  @keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="spinner"></div>
+  <h1>Please wait while we prepare your report<span class="dots"></span></h1>
+  <p>The English version is being generated. This may take a few seconds.</p>
+</div>
+<script>
+  // Redirect to the actual report after a short delay
+  const target = new URLSearchParams(window.location.search).get('url');
+  if (target) {
+    setTimeout(() => { window.location.replace(target); }, 800);
+  }
+</script>
+</body>
+</html>"""
+
+
+@router.get("/loading")
+def report_loading_page(
+    url: str = Query(default=None),
+    request: Request = None,
+):
+    """Loading page shown while report is being translated."""
+    return HTMLResponse(content=LOADING_PAGE_HTML)
+
+
 @router.get("/generate/batch")
 def generate_batch_report(
     evaluation_ids: str,
