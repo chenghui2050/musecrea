@@ -1,7 +1,11 @@
 from openai import OpenAI
 from typing import Dict, List, Optional
+import hashlib
+import logging
 from app.config import settings
 from app.core.i18n import msg
+
+logger = logging.getLogger(__name__)
 
 
 _client = None
@@ -310,6 +314,7 @@ def analyze_comments_batch(
 
 def translate_text(text: str, source_lang: str, target_lang: str) -> str:
     """Translate text between Chinese and English using LLM, preserving markdown formatting.
+    Uses database cache to avoid redundant LLM calls for the same content.
 
     Args:
         text: The text to translate (may contain markdown)
@@ -323,6 +328,23 @@ def translate_text(text: str, source_lang: str, target_lang: str) -> str:
         return text
     if source_lang == target_lang:
         return text
+
+    # Check cache
+    from app.database import SessionLocal
+    from app.models import TranslationCache
+
+    content_hash = hashlib.sha256(text.encode('utf-8')).hexdigest()
+    db = SessionLocal()
+    try:
+        cached = db.query(TranslationCache).filter(
+            TranslationCache.content_hash == content_hash,
+            TranslationCache.source_lang == source_lang,
+            TranslationCache.target_lang == target_lang,
+        ).first()
+        if cached:
+            return cached.translated_text
+    finally:
+        db.close()
 
     target_name = "English" if target_lang == "en" else "Chinese"
     source_name = "Chinese" if source_lang == "zh" else "English"
@@ -347,9 +369,22 @@ def translate_text(text: str, source_lang: str, target_lang: str) -> str:
             max_tokens=4000,
             temperature=0.3,
         )
-        return completion.choices[0].message.content.strip()
+        result = completion.choices[0].message.content.strip()
+
+        # Store in cache
+        db = SessionLocal()
+        try:
+            db.add(TranslationCache(
+                content_hash=content_hash,
+                source_lang=source_lang,
+                target_lang=target_lang,
+                translated_text=result,
+            ))
+            db.commit()
+        finally:
+            db.close()
+
+        return result
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"Translation failed: {e}")
         return text  # Fall back to original text on failure

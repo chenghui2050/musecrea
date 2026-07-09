@@ -356,8 +356,13 @@ def download_report(
     pdf = _generate_pdf([product_data], lang=lang)
     pdf.output(filepath)
 
-    # Save report record
-    html_snippet = _render_report([e], db, lang=lang)
+    # Save report record (reuse already-translated content)
+    html_snippet = _render_report([e], db, lang=lang, translations={
+        e.id: {
+            'llm_analysis': llm_analysis,
+            'improvement_suggestions': improvement_suggestions,
+        }
+    })
     report = Report(
         evaluation_id=evaluation_id,
         report_type="pdf",
@@ -747,8 +752,16 @@ def _generate_pdf(products: list, lang: str = 'zh') -> FPDF:
     return pdf
 
 
-def _render_report(evaluations, db, lang: str = 'zh'):
-    """渲染报告HTML"""
+def _render_report(evaluations, db, lang: str = 'zh', translations: dict = None):
+    """渲染报告HTML
+
+    Args:
+        evaluations: list of Evaluation objects
+        db: database session
+        lang: report language
+        translations: optional dict of {eval_id: {'llm_analysis': str, 'improvement_suggestions': str}}
+                      to use pre-translated content and skip redundant LLM calls
+    """
     tr = REPORT_I18N.get(lang, REPORT_I18N['zh'])
     products = []
     max_score = 1  # 防止除零
@@ -786,10 +799,14 @@ def _render_report(evaluations, db, lang: str = 'zh'):
         llm_analysis = e.llm_analysis or ''
         improvement_suggestions = e.improvement_suggestions or ''
         data_lang = getattr(e, 'data_language', None) or 'zh'
-        if data_lang != lang and llm_analysis:
-            llm_analysis = translate_text(llm_analysis, data_lang, lang)
-        if data_lang != lang and improvement_suggestions:
-            improvement_suggestions = translate_text(improvement_suggestions, data_lang, lang)
+        if translations and e.id in translations:
+            llm_analysis = translations[e.id].get('llm_analysis', llm_analysis)
+            improvement_suggestions = translations[e.id].get('improvement_suggestions', improvement_suggestions)
+        elif data_lang != lang:
+            if llm_analysis:
+                llm_analysis = translate_text(llm_analysis, data_lang, lang)
+            if improvement_suggestions:
+                improvement_suggestions = translate_text(improvement_suggestions, data_lang, lang)
 
         products.append({
             'product_id': product.product_id if product else 'N/A',
