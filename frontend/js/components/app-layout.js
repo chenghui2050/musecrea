@@ -5,6 +5,12 @@ const AppLayout = {
     <!-- Header -->
     <header class="app-header">
       <div class="logo" @click="$router.push('/dashboard')" style="cursor:pointer">
+        <svg class="logo-icon" width="28" height="28" viewBox="0 0 32 32" shape-rendering="crispEdges" fill="currentColor">
+          <rect x="12" y="0" width="8" height="4"/><rect x="8" y="4" width="16" height="4"/>
+          <rect x="4" y="8" width="24" height="4"/><rect x="4" y="12" width="4" height="12"/>
+          <rect x="14" y="12" width="4" height="12"/><rect x="24" y="12" width="4" height="12"/>
+          <rect x="0" y="24" width="32" height="4"/><rect x="0" y="28" width="32" height="4"/>
+        </svg>
         MuseCrea<span>{{ t('app.subtitle') }}</span>
       </div>
       <div class="header-right">
