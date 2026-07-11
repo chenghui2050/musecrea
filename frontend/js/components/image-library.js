@@ -23,7 +23,9 @@ const ImageLibraryModal = {
       <!-- Folder Info Hint -->
       <div style="margin:12px 0;">
         <div class="imglib-tips-toggle" @click="showTips = !showTips">
-          {{ t('imglib.tipsToggle') }} {{ showTips ? '▲' : '▼' }}
+          {{ t('imglib.tipsToggle') }}
+          <svg v-if="showTips" width="10" height="10" viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor" style="vertical-align:middle"><rect x="3" y="2" width="2" height="1"/><rect x="2" y="3" width="4" height="1"/><rect x="1" y="4" width="6" height="1"/><rect x="0" y="5" width="8" height="1"/></svg>
+          <svg v-else width="10" height="10" viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor" style="vertical-align:middle"><rect x="0" y="2" width="8" height="1"/><rect x="1" y="3" width="6" height="1"/><rect x="2" y="4" width="4" height="1"/><rect x="3" y="5" width="2" height="1"/></svg>
         </div>
         <div v-if="showTips" class="imglib-tips-content">
           <p><strong>{{ t('imglib.tipDirectTitle') }}</strong> — {{ t('imglib.tipDirectDesc') }}</p>
@@ -33,8 +35,8 @@ const ImageLibraryModal = {
           </div>
           <p style="margin-top:6px">{{ t('imglib.tipNaming') }}</p>
           <p>{{ t('imglib.tipFormats') }}</p>
-          <p v-if="!folderExists" style="color:#fcee0a;margin-top:6px">{{ t('imglib.tipNoFolder') }}</p>
-          <p v-else style="color:#05ffa1;margin-top:6px">{{ t('imglib.tipFolderReady') }} {{ images.length }} {{ t('imglib.tipImageCount') }}</p>
+          <p v-if="!folderExists" style="color:#f7d51d;margin-top:6px">{{ t('imglib.tipNoFolder') }}</p>
+          <p v-else style="color:#92cc41;margin-top:6px">{{ t('imglib.tipFolderReady') }} {{ images.length }} {{ t('imglib.tipImageCount') }}</p>
         </div>
       </div>
 

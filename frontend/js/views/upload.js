@@ -5,17 +5,26 @@ const UploadPage = {
     <!-- Step Indicator -->
     <div class="step-indicator">
       <div class="step-item" :class="{ active: step===1, done: step>1 }">
-        <span class="step-num">{{ step > 1 ? '✓' : '1' }}</span>
+        <span class="step-num">
+          <svg v-if="step > 1" width="14" height="14" viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor"><rect x="5" y="1" width="2" height="1"/><rect x="4" y="2" width="2" height="1"/><rect x="3" y="3" width="2" height="1"/><rect x="1" y="4" width="3" height="1"/><rect x="2" y="5" width="2" height="1"/></svg>
+          <span v-else>1</span>
+        </span>
         <span class="step-label">{{ t('upload.step1') }}</span>
       </div>
       <div class="step-connector" :class="{ done: step>1 }"></div>
       <div class="step-item" :class="{ active: step===2, done: step>2 }">
-        <span class="step-num">{{ step > 2 ? '✓' : '2' }}</span>
+        <span class="step-num">
+          <svg v-if="step > 2" width="14" height="14" viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor"><rect x="5" y="1" width="2" height="1"/><rect x="4" y="2" width="2" height="1"/><rect x="3" y="3" width="2" height="1"/><rect x="1" y="4" width="3" height="1"/><rect x="2" y="5" width="2" height="1"/></svg>
+          <span v-else>2</span>
+        </span>
         <span class="step-label">{{ t('upload.step2') }}</span>
       </div>
       <div class="step-connector" :class="{ done: step>2 }"></div>
       <div class="step-item" :class="{ active: step===3, done: step>3 }">
-        <span class="step-num">{{ step > 3 ? '✓' : '3' }}</span>
+        <span class="step-num">
+          <svg v-if="step > 3" width="14" height="14" viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor"><rect x="5" y="1" width="2" height="1"/><rect x="4" y="2" width="2" height="1"/><rect x="3" y="3" width="2" height="1"/><rect x="1" y="4" width="3" height="1"/><rect x="2" y="5" width="2" height="1"/></svg>
+          <span v-else>3</span>
+        </span>
         <span class="step-label">{{ t('upload.step3') }}</span>
       </div>
       <div class="step-connector" :class="{ done: step>3 }"></div>
@@ -90,7 +99,7 @@ const UploadPage = {
             <div v-if="productImagePreviews && productImagePreviews[pid]" class="product-img-preview">
               <img :src="productImagePreviews[pid]" />
               <div class="product-img-overlay" @click="removeProductImage(pid)">
-                <span>✕ {{ t('upload.remove') }}</span>
+                <span><svg width="12" height="12" viewBox="0 0 8 8" shape-rendering="crispEdges" fill="currentColor" style="vertical-align:middle;margin-right:4px"><rect x="1" y="1" width="1" height="1"/><rect x="6" y="1" width="1" height="1"/><rect x="2" y="2" width="1" height="1"/><rect x="5" y="2" width="1" height="1"/><rect x="3" y="3" width="2" height="1"/><rect x="3" y="4" width="2" height="1"/><rect x="2" y="5" width="1" height="1"/><rect x="5" y="5" width="1" height="1"/><rect x="1" y="6" width="1" height="1"/><rect x="6" y="6" width="1" height="1"/></svg>{{ t('upload.remove') }}</span>
               </div>
             </div>
             <div v-else class="product-img-dropzone" @click="openImagePicker(pid)">
@@ -113,13 +122,13 @@ const UploadPage = {
 
     <!-- Step 3: Confirm & Run -->
     <div v-if="step === 3" class="section-card">
-      <h2>⚡ {{ t('upload.title3') }}</h2>
+      <h2><svg width="16" height="16" viewBox="0 0 8 8" shape-rendering="crispEdges" fill="var(--warning)" style="vertical-align:middle;margin-right:6px"><rect x="4" y="0" width="3" height="1"/><rect x="3" y="1" width="3" height="1"/><rect x="2" y="2" width="3" height="1"/><rect x="1" y="3" width="5" height="1"/><rect x="3" y="4" width="3" height="1"/><rect x="2" y="5" width="3" height="1"/><rect x="1" y="6" width="3" height="1"/></svg>{{ t('upload.title3') }}</h2>
 
       <el-descriptions :column="1" border style="margin-bottom:20px">
         <el-descriptions-item :label="t('upload.selectedProducts')">
           <div style="display:flex;flex-wrap:wrap;gap:8px;">
             <span v-for="pid in selectedProducts" :key="pid" class="product-chip">
-              <span v-if="productImagePreviews[pid]" style="color:#05ffa1;"><span class="px-icon px-cam" style="display:inline"></span></span>
+              <span v-if="productImagePreviews[pid]" style="color:#92cc41;"><span class="px-icon px-cam" style="display:inline"></span></span>
               <span v-else class="text-muted"><span class="px-icon px-cam" style="display:inline"></span></span>
               {{ pid }}
             </span>
@@ -151,7 +160,7 @@ const UploadPage = {
         </div>
         <div class="cost-row">
           <span>{{ t('upload.currentBalance') }}</span>
-          <span :style="{ color: userCredits >= totalCost ? '#05ffa1' : '#ff2a6d' }">{{ userCredits }} {{ t('upload.timesUnit') }}</span>
+          <span :style="{ color: userCredits >= totalCost ? '#92cc41' : '#e76e55' }">{{ userCredits }} {{ t('upload.timesUnit') }}</span>
         </div>
       </div>
 

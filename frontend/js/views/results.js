@@ -43,13 +43,45 @@ const ResultsPage = {
           <p class="fb-widget-desc">{{ t('results.fbDesc') }}</p>
           <div class="fb-widget-thumbs">
             <button class="fb-widget-thumb" :class="{ 'fb-up-active': fbSentiment === 'up' }" @click="fbSentiment = fbSentiment === 'up' ? '' : 'up'">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+              <svg width="22" height="22" viewBox="0 0 16 16" shape-rendering="crispEdges" fill="currentColor">
+                <rect x="7" y="0" width="3" height="2"/>
+                <rect x="7" y="2" width="4" height="1"/>
+                <rect x="7" y="3" width="5" height="1"/>
+                <rect x="8" y="4" width="6" height="1"/>
+                <rect x="8" y="5" width="7" height="1"/>
+                <rect x="0" y="6" width="5" height="4"/>
+                <rect x="6" y="6" width="9" height="1"/>
+                <rect x="7" y="7" width="8" height="1"/>
+                <rect x="7" y="8" width="8" height="1"/>
+                <rect x="0" y="10" width="5" height="4"/>
+                <rect x="6" y="10" width="7" height="1"/>
+                <rect x="6" y="11" width="6" height="1"/>
+                <rect x="6" y="12" width="5" height="1"/>
+                <rect x="6" y="13" width="4" height="2"/>
               </svg>
             </button>
             <button class="fb-widget-thumb" :class="{ 'fb-down-active': fbSentiment === 'down' }" @click="fbSentiment = fbSentiment === 'down' ? '' : 'down'">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/>
+              <svg width="22" height="22" viewBox="0 0 16 16" shape-rendering="crispEdges" fill="currentColor">
+                <rect x="1" y="0" width="3" height="1"/>
+                <rect x="1" y="1" width="4" height="1"/>
+                <rect x="2" y="2" width="4" height="1"/>
+                <rect x="2" y="3" width="3" height="1"/>
+                <rect x="2" y="4" width="3" height="1"/>
+                <rect x="0" y="5" width="4" height="4"/>
+                <rect x="4" y="5" width="8" height="1"/>
+                <rect x="4" y="6" width="7" height="1"/>
+                <rect x="4" y="7" width="6" height="1"/>
+                <rect x="4" y="8" width="5" height="1"/>
+                <rect x="6" y="9" width="4" height="1"/>
+                <rect x="0" y="10" width="4" height="1"/>
+                <rect x="6" y="10" width="3" height="1"/>
+                <rect x="0" y="11" width="4" height="1"/>
+                <rect x="6" y="11" width="2" height="1"/>
+                <rect x="0" y="12" width="4" height="1"/>
+                <rect x="5" y="12" width="2" height="1"/>
+                <rect x="0" y="13" width="4" height="1"/>
+                <rect x="5" y="13" width="2" height="2"/>
+                <rect x="0" y="14" width="4" height="2"/>
               </svg>
             </button>
           </div>
@@ -118,11 +150,11 @@ const ResultsPage = {
     const maxScore = Vue.ref(1);
 
     const dimConfig = [
-      { key: 'Novelty', label: t('dim.novelty'), color: '#00f0ff' },
-      { key: 'Usefulness', label: t('dim.usefulness'), color: '#f093fb' },
-      { key: 'Affect', label: t('dim.affect'), color: '#ff2a6d' },
-      { key: 'Aesthetics', label: t('dim.aesthetics'), color: '#05ffa1' },
-      { key: 'Cultural Values', label: t('dim.cultural'), color: '#fcee0a' },
+      { key: 'Novelty', label: t('dim.novelty'), color: '#209cee' },
+      { key: 'Usefulness', label: t('dim.usefulness'), color: '#92cc41' },
+      { key: 'Affect', label: t('dim.affect'), color: '#e76e55' },
+      { key: 'Aesthetics', label: t('dim.aesthetics'), color: '#f093fb' },
+      { key: 'Cultural Values', label: t('dim.cultural'), color: '#f7d51d' },
     ];
 
     const getRankedDimensions = (r) => {
@@ -187,8 +219,8 @@ const ResultsPage = {
           datasets: [{
             label: t('dim.scoreLabel'),
             data: scores,
-            borderColor: 'rgba(0,240,255,0.8)',
-            backgroundColor: 'rgba(0,240,255,0.08)',
+            borderColor: 'rgba(32,156,238,0.8)',
+            backgroundColor: 'rgba(32,156,238,0.1)',
             borderWidth: 2.5,
             pointBackgroundColor: colors,
             pointBorderColor: '#0f0f23',
@@ -207,8 +239,8 @@ const ResultsPage = {
               suggestedMax: suggestedMax,
               ticks: { display: false, stepSize: 0.1 },
               pointLabels: { font: { size: 14, family: 'Microsoft YaHei', weight: 'bold' }, color: colors, padding: 16 },
-              grid: { color: 'rgba(100,100,160,0.4)', lineWidth: 1 },
-              angleLines: { color: 'rgba(100,100,160,0.5)', lineWidth: 1 },
+              grid: { color: 'rgba(128,128,128,0.3)', lineWidth: 1 },
+              angleLines: { color: 'rgba(128,128,128,0.4)', lineWidth: 1 },
             }
           },
           plugins: { legend: { display: false } }
