@@ -5,13 +5,13 @@ const AppLayout = {
     <!-- Header -->
     <header class="app-header">
       <div class="logo" @click="$router.push('/dashboard')" style="cursor:pointer">
-        <svg class="logo-icon" width="28" height="28" viewBox="0 0 32 32" shape-rendering="crispEdges" fill="currentColor">
-          <rect x="14" y="0" width="4" height="2"/><rect x="12" y="2" width="8" height="2"/>
-          <rect x="10" y="4" width="12" height="2"/><rect x="8" y="6" width="16" height="2"/>
-          <rect x="6" y="8" width="20" height="2"/><rect x="4" y="10" width="24" height="2"/>
-          <rect x="4" y="12" width="4" height="12"/><rect x="14" y="12" width="4" height="12"/>
-          <rect x="24" y="12" width="4" height="12"/>
-          <rect x="2" y="24" width="28" height="4"/><rect x="0" y="28" width="32" height="4"/>
+        <svg class="logo-icon" width="28" height="28" viewBox="0 0 32 32" fill="currentColor">
+          <path d="M16,1 L31,11 L28,11 L16,3 L4,11 L1,11 Z"/>
+          <rect x="4" y="11" width="4" height="14"/>
+          <rect x="14" y="11" width="4" height="14"/>
+          <rect x="24" y="11" width="4" height="14"/>
+          <rect x="2" y="25" width="28" height="3"/>
+          <rect x="0" y="28" width="32" height="3"/>
         </svg>
         MuseCrea<span>{{ t('app.subtitle') }}</span>
       </div>
