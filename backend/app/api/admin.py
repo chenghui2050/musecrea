@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from app.database import get_db
 from app.models import User, Evaluation, Order, Coupon
 from app.schemas import SystemStats, CouponCreate, CouponResponse
-from app.core.security import get_current_admin
+from app.core.security import get_current_admin, get_password_hash
 from app.core.i18n import msg, get_request_lang
 
 router = APIRouter(prefix="/admin", tags=["管理后台"])
@@ -91,6 +91,26 @@ def toggle_user_active(
     user.is_active = not user.is_active
     db.commit()
     return {'user_id': user_id, 'is_active': user.is_active}
+
+
+@router.put("/users/{user_id}/reset-password")
+def reset_user_password(
+    request: Request,
+    user_id: int,
+    new_password: str = None,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    """管理员重置用户密码"""
+    lang = get_request_lang(request)
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail=msg("admin.user_not_found", lang))
+    # Default password if none provided
+    pwd = new_password if new_password and len(new_password) >= 6 else "MuseCrea123"
+    user.hashed_password = get_password_hash(pwd)
+    db.commit()
+    return {'user_id': user_id, 'message': msg('admin.password_reset_ok', lang)}
 
 
 @router.put("/users/{user_id}/credits")

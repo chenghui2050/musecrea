@@ -15,6 +15,13 @@ MESSAGES = {
     'auth.wrong_credentials': ('用户名或密码错误', 'Invalid username or password'),
     'auth.account_disabled': ('账号已被禁用', 'Account has been disabled'),
     'auth.admin_required': ('需要管理员权限', 'Admin privileges required'),
+    'auth.reset_email_sent': ('如果该邮箱已注册，重置密码链接已发送', 'If the email is registered, a password reset link has been sent'),
+    'auth.invalid_reset_token': ('重置链接无效或已过期', 'Reset link is invalid or expired'),
+    'auth.password_too_short': ('密码至少需要6个字符', 'Password must be at least 6 characters'),
+    'auth.password_reset_ok': ('密码重置成功', 'Password reset successful'),
+
+    # Admin
+    'admin.password_reset_ok': ('用户密码已重置', 'User password has been reset'),
 
     # Upload
     'upload.file_too_large': ('文件大小超过限制 ({}MB)', 'File size exceeds limit ({}MB)'),
@@ -37,6 +44,8 @@ MESSAGES = {
     # Report
     'report.not_found': ('评价记录不存在', 'Evaluation record not found'),
     'report.batch_not_found': ('未找到评价记录', 'No evaluation records found'),
+    'report.feedback_sent': ('反馈已发送，感谢您的评价！', 'Feedback sent, thank you!'),
+    'report.feedback_send_failed': ('反馈发送失败，请稍后重试', 'Failed to send feedback, please try again later'),
 
     # Billing
     'billing.invalid_coupon': ('无效的优惠券码', 'Invalid coupon code'),

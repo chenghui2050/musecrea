@@ -1,18 +1,22 @@
 import os
 import re
 import json
+import base64
 import markdown as md
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, FileResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User, Evaluation, Report, Product
 from app.core.security import get_current_user, decode_token
 from app.core.i18n import msg, get_request_lang
 from app.config import settings
+from app.services.email_service import send_feedback_email
 from jinja2 import Template
 from datetime import datetime
 from fpdf import FPDF
+from playwright.sync_api import sync_playwright
 
 router = APIRouter(prefix="/report", tags=["报告生成"])
 
@@ -90,14 +94,14 @@ REPORT_TEMPLATE = """
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'ChineseFont', 'Microsoft YaHei', 'SimHei', 'PingFang SC', sans-serif; background: #f5f7fa; color: #2c3e50; line-height: 1.6; }
-  .container { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
-  .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 50px 40px; border-radius: 16px; margin-bottom: 30px; }
-  .header h1 { font-size: 28px; margin-bottom: 8px; }
-  .header .subtitle { font-size: 14px; opacity: 0.85; }
-  .header .meta { display: flex; gap: 30px; margin-top: 20px; font-size: 13px; opacity: 0.9; }
-  .card { background: white; border-radius: 12px; padding: 30px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-  .card h2 { font-size: 20px; color: #2c3e50; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #667eea; }
-  .product-section { margin-bottom: 40px; }
+  .container { max-width: 100%; margin: 0 auto; padding: 20px 40px; }
+  .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 28px 30px; border-radius: 12px; margin-bottom: 20px; }
+  .header h1 { font-size: 24px; margin-bottom: 6px; }
+  .header .subtitle { font-size: 13px; opacity: 0.85; }
+  .header .meta { display: flex; gap: 20px; margin-top: 14px; font-size: 13px; opacity: 0.9; }
+  .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .card h2 { font-size: 20px; color: #2c3e50; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #667eea; }
+  .product-section { margin-bottom: 24px; }
   .product-header { display: flex; align-items: center; gap: 20px; margin-bottom: 24px; }
   .product-image { width: 120px; height: 120px; object-fit: cover; border-radius: 12px; border: 2px solid #eee; }
   .score-badge { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 8px 20px; border-radius: 20px; font-size: 18px; font-weight: bold; }
@@ -136,6 +140,12 @@ REPORT_TEMPLATE = """
   .md-content table th { background: #f0f2ff; color: #2c3e50; font-weight: 600; padding: 10px 14px; text-align: left; border: 1px solid #d0d5dd; }
   .md-content table td { padding: 9px 14px; border: 1px solid #d0d5dd; color: #444; }
   .md-content table tr:nth-child(even) { background: #fafbff; }
+  @page { size: A4; margin: 12mm; }
+  @media print {
+    body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .container { max-width: 100%; padding: 0; }
+    .card { box-shadow: none; border: 1px solid #e0e0e0; }
+  }
 </style>
 </head>
 <body>
@@ -278,7 +288,7 @@ def download_report(
     current_user: User = Depends(_get_current_user_with_token),
     db: Session = Depends(get_db),
 ):
-    """下载报告为PDF文件（使用fpdf2生成，完美支持中文）"""
+    """下载报告为PDF文件（使用Playwright渲染HTML并导出PDF）"""
     e = db.query(Evaluation).filter(
         Evaluation.id == evaluation_id,
         Evaluation.user_id == current_user.id,
@@ -286,82 +296,74 @@ def download_report(
     if not e:
         raise HTTPException(status_code=404, detail=msg("report.not_found", lang or 'zh'))
 
-    # 使用数据集语言作为报告语言
     lang = lang or e.data_language or 'zh'
 
-    # Build product data for PDF
-    tr = REPORT_I18N.get(lang, REPORT_I18N['zh'])
-    product = e.product
-    dim_labels = tr['dim_labels']
-    dim_colors_rgb = {
-        'Novelty': (102, 126, 234), 'Usefulness': (118, 75, 162), 'Affect': (240, 147, 251),
-        'Aesthetics': (79, 172, 254), 'Cultural Values': (67, 233, 123),
-    }
-    dim_scores = {
-        'Novelty': e.novelty_score or 0,
-        'Usefulness': e.usefulness_score or 0,
-        'Affect': e.affect_score or 0,
-        'Aesthetics': e.aesthetics_score or 0,
-        'Cultural Values': e.cultural_value_score or 0,
-    }
-    sorted_dims = sorted(dim_scores.items(), key=lambda x: x[1], reverse=True)
-    dimensions = []
-    for rank, (dim, score) in enumerate(sorted_dims, 1):
-        dimensions.append({
-            'name': dim_labels.get(dim, dim),
-            'score': score,
-            'rank': rank,
-            'color': dim_colors_rgb.get(dim, (150, 150, 150)),
-        })
+    # Generate HTML report with PDF-specific processing (base64 images, stripped suggestions)
+    html_content = _render_report([e], db, lang=lang, for_pdf=True)
 
-    # Resolve product image to local file path
-    image_path = None
-    if product and product.image_url:
-        # image_url is like "/uploads/images/P3.png"
-        rel = product.image_url.lstrip('/')
-        candidate = os.path.join(settings.UPLOAD_DIR, rel.replace('uploads/', '', 1) if rel.startswith('uploads/') else rel)
-        # Actually the path is: UPLOAD_DIR/images/filename
-        img_filename = os.path.basename(rel)
-        candidate = os.path.join(settings.UPLOAD_DIR, 'images', img_filename)
-        if os.path.isfile(candidate):
-            image_path = candidate
-
-    # 报告内容语言跟随数据集语言，无需翻译
-    llm_analysis = e.llm_analysis or ''
-    improvement_suggestions = e.improvement_suggestions or ''
-
-    product_data = {
-        'product_id': product.product_id if product else 'N/A',
-        'product_name': product.name if product else '',
-        'image_path': image_path,
-        'creativity_score': e.creativity_score,
-        'sample_count': e.sample_count,
-        'dimensions': dimensions,
-        'llm_analysis': llm_analysis,
-        'improvement_suggestions': improvement_suggestions,
-    }
-
-    # Generate PDF
+    # Save PDF
     report_dir = os.path.join(settings.UPLOAD_DIR, "reports")
     os.makedirs(report_dir, exist_ok=True)
     filename = f"musecrea_report_{evaluation_id}_{datetime.now().strftime('%Y%m%d')}.pdf"
     filepath = os.path.join(report_dir, filename)
 
-    pdf = _generate_pdf([product_data], lang=lang)
-    pdf.output(filepath)
+    pw = sync_playwright().start()
+    try:
+        browser = pw.chromium.launch()
+        page = browser.new_page()
+        page.emulate_media(media='print')
+        page.set_content(html_content, wait_until='networkidle')
+        page.pdf(path=filepath, format='A4', print_background=True,
+                 margin={'top': '12mm', 'bottom': '12mm', 'left': '12mm', 'right': '12mm'})
+        browser.close()
+    finally:
+        pw.stop()
 
     # Save report record
-    html_snippet = _render_report([e], db, lang=lang)
     report = Report(
         evaluation_id=evaluation_id,
         report_type="pdf",
-        report_data=html_snippet[:1000],
+        report_data=html_content[:1000],
         file_path=filepath,
     )
     db.add(report)
     db.commit()
 
     return FileResponse(filepath, filename=filename, media_type="application/pdf")
+
+
+class ReportFeedback(BaseModel):
+    evaluation_id: int
+    sentiment: str  # "up" or "down"
+    feedback_text: str = ""
+
+
+@router.post("/feedback")
+def submit_report_feedback(
+    fb: ReportFeedback,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """用户对报告的反馈（点赞/点踩+文字），发送邮件给管理员"""
+    lang = get_request_lang(request)
+    if fb.sentiment not in ("up", "down"):
+        raise HTTPException(status_code=400, detail="sentiment must be 'up' or 'down'")
+
+    e = db.query(Evaluation).filter(Evaluation.id == fb.evaluation_id).first()
+    if not e:
+        raise HTTPException(status_code=404, detail=msg("report.not_found", lang))
+
+    ok = send_feedback_email(
+        username=current_user.username,
+        evaluation_id=fb.evaluation_id,
+        sentiment=fb.sentiment,
+        feedback_text=fb.feedback_text.strip(),
+    )
+    if not ok:
+        raise HTTPException(status_code=500, detail=msg("report.feedback_send_failed", lang))
+
+    return {"message": msg("report.feedback_sent", lang)}
 
 
 # ──────────────────────────────────────────
@@ -386,6 +388,22 @@ class _ReportPDF(FPDF):
         self.cell(0, 10, text, align='C')
 
 
+def _join_paragraph_lines(lines: list) -> str:
+    """Join paragraph lines smartly: no space between CJK lines, space for Latin."""
+    if not lines:
+        return ''
+    result = lines[0]
+    for i in range(1, len(lines)):
+        prev = result[-1] if result else ''
+        curr = lines[i][0] if lines[i] else ''
+        # If both boundary chars are CJK, join without space
+        if (prev and ord(prev) > 0x2E80) and (curr and ord(curr) > 0x2E80):
+            result += lines[i]
+        else:
+            result += ' ' + lines[i]
+    return result
+
+
 def _parse_md_blocks(text: str) -> list:
     """Parse markdown text into a list of structured blocks for PDF rendering.
 
@@ -403,7 +421,7 @@ def _parse_md_blocks(text: str) -> list:
 
     def flush_paragraph():
         if paragraph_buf:
-            full = ' '.join(paragraph_buf)
+            full = _join_paragraph_lines(paragraph_buf)
             paragraph_buf.clear()
             bold_segs = _parse_bold_segments(full)
             blocks.append({'type': 'paragraph', 'text': full, 'bold_segments': bold_segs})
@@ -474,8 +492,26 @@ def _parse_bold_segments(text: str) -> list:
     return segments if segments else [(text, False)]
 
 
-def _render_md_blocks(pdf: FPDF, text: str):
-    """Render parsed markdown blocks into the PDF."""
+def _postprocess_suggestions(text: str) -> str:
+    """Post-process improvement suggestions: remove time-period patterns only."""
+    if not text:
+        return text
+
+    # Remove time-period patterns: (1周内), (4周迭代), (Q3落地), （1个月内）, etc.
+    text = re.sub(r'[（(]\s*[^）)\n]*?(?:内|迭代|落地|短期|长期)\s*[）)]', '', text)
+
+    # Also clean up inline occurrences line by line
+    cleaned_lines = []
+    for line in text.split('\n'):
+        stripped = line.strip()
+        cleaned = re.sub(r'[（(]\s*[^）)\n]*?(?:内|迭代|落地)\s*[）)]', '', stripped)
+        cleaned_lines.append(cleaned)
+
+    return '\n'.join(cleaned_lines).strip()
+
+
+def _render_md_blocks(pdf: FPDF, text: str, text_color: tuple = None):
+    """Render parsed markdown blocks into the PDF using multi_cell for reliable CJK wrapping."""
     blocks = _parse_md_blocks(text)
     for block in blocks:
         btype = block['type']
@@ -489,69 +525,80 @@ def _render_md_blocks(pdf: FPDF, text: str):
 
         elif btype == 'h2':
             pdf.ln(4)
-            pdf.set_font('SimHei', size=13)
+            pdf.set_font('SimHei', size=15)
             pdf.set_text_color(102, 126, 234)
-            pdf.multi_cell(0, 8, block['text'])
+            pdf.multi_cell(0, 9, block['text'])
             pdf.set_draw_color(102, 126, 234)
             pdf.set_line_width(0.4)
-            pdf.line(pdf.l_margin, pdf.get_y(), pdf.l_margin + 60, pdf.get_y())
+            pdf.line(pdf.l_margin, pdf.get_y(), pdf.w - pdf.r_margin, pdf.get_y())
             pdf.ln(3)
 
         elif btype == 'h3':
             pdf.ln(3)
-            pdf.set_font('SimHei', size=12)
+            pdf.set_font('SimHei', size=13)
             pdf.set_text_color(44, 62, 80)
-            _write_bold_text(pdf, block['bold_segments'], size=12)
+            _paragraph_text(pdf, block['text'], size=13, text_color=(44, 62, 80))
             pdf.ln(2)
 
         elif btype == 'h4':
             pdf.ln(2)
-            pdf.set_font('SimHei', size=11)
+            pdf.set_font('SimHei', size=12)
             pdf.set_text_color(60, 60, 80)
-            _write_bold_text(pdf, block['bold_segments'], size=11)
+            _paragraph_text(pdf, block['text'], size=12, text_color=(60, 60, 80))
             pdf.ln(2)
 
         elif btype == 'bullet':
-            pdf.set_font('SimHei', size=10)
-            pdf.set_text_color(60, 60, 60)
+            color = text_color or (60, 60, 60)
             x_start = pdf.l_margin + 4
-            bullet_char = '•'
+            # Bullet character
+            pdf.set_font('SimHei', size=11)
+            pdf.set_text_color(*color)
             pdf.set_x(x_start)
-            pdf.cell(6, 6, bullet_char)
+            pdf.cell(6, 7, '•')
+            # Bullet text via multi_cell for proper wrapping
             pdf.set_x(x_start + 6)
-            _write_bold_text(pdf, block['bold_segments'], size=10, left_margin=x_start + 6)
-            pdf.ln(1)
+            _paragraph_text(pdf, block['text'], size=11, text_color=color,
+                            left_margin=x_start + 6)
+            pdf.ln(2)
 
         elif btype == 'paragraph':
-            pdf.set_font('SimHei', size=10)
-            pdf.set_text_color(60, 60, 60)
-            _write_bold_text(pdf, block['bold_segments'], size=10)
+            color = text_color or (60, 60, 60)
+            _paragraph_text(pdf, block['text'], size=11, text_color=color)
             pdf.ln(3)
 
 
-def _write_bold_text(pdf: FPDF, segments: list, size: int = 10, left_margin: float = None):
-    """Write a line of text with inline bold support using multi_cell."""
+def _paragraph_text(pdf: FPDF, text: str, size: int = 11, text_color: tuple = None,
+                    left_margin: float = None):
+    """Render text using multi_cell for reliable line wrapping (no space-based breaks)."""
+    color = text_color or (60, 60, 60)
     if left_margin is None:
         left_margin = pdf.l_margin
 
-    # Build a single string with bold markers for fpdf2 write_html-like rendering
-    # Since fpdf2 doesn't support inline bold in multi_cell easily, we render the whole
-    # block as multi_cell and use a simple approach: write each segment
-    available_w = pdf.w - pdf.r_margin - left_margin
+    # Strip **bold** markers for clean output
+    clean = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
 
-    # Use write() for inline rendering
-    x_start = left_margin
+    pdf.set_font('SimHei', size=size)
+    pdf.set_text_color(*color)
+    pdf.set_x(left_margin)
+    pdf.multi_cell(0, 7, clean)
+
+
+def _write_bold_text(pdf: FPDF, segments: list, size: int = 11, left_margin: float = None, text_color: tuple = None):
+    """Write text with inline bold via write() — used only for short texts (e.g. dimension scores)."""
+    if left_margin is None:
+        left_margin = pdf.l_margin
+
+    normal_color = text_color or (60, 60, 60)
     for text, is_bold in segments:
         if is_bold:
-            pdf.set_font('SimHei', size=size)
-            # Simulate bold by slightly darker color
-            pdf.set_text_color(30, 30, 40)
+            pdf.set_font('SimHei', size=size + 1)
+            pdf.set_text_color(20, 20, 30)
         else:
             pdf.set_font('SimHei', size=size)
-            pdf.set_text_color(60, 60, 60)
-        pdf.write(6, text)
+            pdf.set_text_color(*normal_color)
+        pdf.write(7, text)
 
-    pdf.ln(6)
+    pdf.ln(7)
 
 
 def _generate_pdf(products: list, lang: str = 'zh') -> FPDF:
@@ -561,127 +608,159 @@ def _generate_pdf(products: list, lang: str = 'zh') -> FPDF:
     pdf.alias_nb_pages()
     pdf.add_page()
 
-    # ── Title banner ──
-    # Gradient-like header using filled rectangles
-    pdf.set_fill_color(102, 126, 234)
-    pdf.rect(0, 0, pdf.w, 50, 'F')
-    # Lighter strip at bottom for gradient effect
-    pdf.set_fill_color(118, 75, 162)
-    pdf.rect(0, 40, pdf.w, 15, 'F')
+    # ── Title banner (multi-strip gradient simulation) ──
+    steps = 10
+    for i in range(steps):
+        ratio = i / steps
+        r = int(102 + (118 - 102) * ratio)
+        g = int(126 + (75 - 126) * ratio)
+        b = int(234 + (162 - 234) * ratio)
+        pdf.set_fill_color(r, g, b)
+        y0 = i * 5
+        pdf.rect(0, y0, pdf.w, 6, 'F')
 
-    pdf.set_font('SimHei', size=22)
+    pdf.set_font('SimHei', size=26)
     pdf.set_text_color(255, 255, 255)
-    pdf.set_y(10)
-    pdf.cell(0, 12, tr['title'], align='C')
+    pdf.set_y(8)
+    pdf.cell(0, 14, tr['title'], align='C')
 
-    pdf.set_font('SimHei', size=10)
+    pdf.set_font('SimHei', size=12)
     pdf.set_text_color(255, 255, 255)
-    pdf.set_y(25)
-    pdf.cell(0, 7, tr['subtitle'], align='C')
+    pdf.set_y(24)
+    pdf.cell(0, 8, tr['subtitle'], align='C')
 
-    pdf.set_font('SimHei', size=8)
+    pdf.set_font('SimHei', size=9)
     pdf.set_text_color(230, 230, 255)
-    pdf.set_y(38)
+    pdf.set_y(36)
     report_date = datetime.now().strftime(tr['date_format'])
     pdf.cell(0, 6, f'{tr["report_date"]}：{report_date}  |  {tr["product_count"]}：{len(products)}  |  {tr["generation_method"]}', align='C')
 
-    pdf.set_y(60)
+    pdf.set_y(58)
+
+    # Global max score for consistent bar normalization across products
+    global_max_score = 1
+    for prod in products:
+        for dim in prod['dimensions']:
+            if dim['score'] > global_max_score:
+                global_max_score = dim['score']
+
+    # Rank badge colors (matching HTML)
+    rank_colors = {
+        1: (212, 237, 218, 21, 87, 36),
+        2: (204, 229, 255, 0, 64, 133),
+        3: (255, 243, 205, 133, 100, 4),
+        4: (248, 215, 218, 114, 28, 36),
+        5: (245, 198, 203, 114, 28, 36),
+    }
 
     # ── Product sections ──
     for prod in products:
-        # Check if we need a new page (need at least 80mm of space)
         if pdf.get_y() > pdf.h - 100:
             pdf.add_page()
 
         # Product header
-        pdf.set_font('SimHei', size=16)
+        pdf.set_font('SimHei', size=18)
         pdf.set_text_color(44, 62, 80)
         title = f"{tr['product_prefix']} {prod['product_id']}"
-        if prod.get('product_name'):
-            title += f" - {prod['product_name']}"
         pdf.cell(0, 12, title)
         pdf.ln(10)
 
-        # Product image (if available)
+        if prod.get('product_name'):
+            pdf.set_font('SimHei', size=11)
+            pdf.set_text_color(120, 120, 120)
+            pdf.cell(0, 7, prod['product_name'])
+            pdf.ln(8)
+
+        # Product image + score badge
         if prod.get('image_path') and os.path.isfile(prod['image_path']):
             try:
                 img_x = pdf.l_margin
                 img_y = pdf.get_y()
-                pdf.image(prod['image_path'], x=img_x, y=img_y, w=35, h=35)
-                # Score badge next to image
-                pdf.set_xy(img_x + 40, img_y + 2)
-                pdf.set_font('SimHei', size=11)
+                pdf.image(prod['image_path'], x=img_x, y=img_y, w=30, h=30)
+                pdf.set_xy(img_x + 35, img_y + 2)
+                pdf.set_font('SimHei', size=12)
                 pdf.set_fill_color(102, 126, 234)
                 pdf.set_text_color(255, 255, 255)
-                pdf.cell(45, 8, f'  {tr["creativity_score"]} {prod["creativity_score"]:.4f}', fill=True)
-                pdf.set_xy(img_x + 40, img_y + 14)
-                pdf.set_font('SimHei', size=9)
+                pdf.cell(50, 9, f'  {tr["creativity_score"]} {prod["creativity_score"]:.4f}', fill=True)
+                pdf.set_xy(img_x + 35, img_y + 15)
+                pdf.set_font('SimHei', size=10)
                 pdf.set_text_color(120, 120, 120)
-                pdf.cell(0, 6, f'{tr["sample_count"]}：{prod["sample_count"]}')
-                pdf.set_y(img_y + 40)
+                pdf.cell(0, 7, f'{tr["sample_count"]}：{prod["sample_count"]}')
+                pdf.set_y(img_y + 36)
             except Exception:
-                pdf.set_y(pdf.get_y() + 5)
-                pdf.set_font('SimHei', size=11)
+                pdf.set_font('SimHei', size=12)
                 pdf.set_fill_color(102, 126, 234)
                 pdf.set_text_color(255, 255, 255)
-                pdf.cell(50, 8, f'  {tr["creativity_score"]} {prod["creativity_score"]:.4f}', fill=True)
+                pdf.cell(55, 9, f'  {tr["creativity_score"]} {prod["creativity_score"]:.4f}', fill=True)
                 pdf.set_text_color(120, 120, 120)
-                pdf.set_font('SimHei', size=9)
-                pdf.cell(0, 8, f'  {tr["sample_count"]}：{prod["sample_count"]}')
+                pdf.set_font('SimHei', size=10)
+                pdf.cell(0, 9, f'  {tr["sample_count"]}：{prod["sample_count"]}')
                 pdf.ln(12)
         else:
-            pdf.set_font('SimHei', size=11)
+            pdf.set_font('SimHei', size=12)
             pdf.set_fill_color(102, 126, 234)
             pdf.set_text_color(255, 255, 255)
-            pdf.cell(50, 8, f'  {tr["creativity_score"]} {prod["creativity_score"]:.4f}', fill=True)
+            pdf.cell(55, 9, f'  {tr["creativity_score"]} {prod["creativity_score"]:.4f}', fill=True)
             pdf.set_text_color(120, 120, 120)
-            pdf.set_font('SimHei', size=9)
-            pdf.cell(0, 8, f'  {tr["sample_count"]}：{prod["sample_count"]}')
+            pdf.set_font('SimHei', size=10)
+            pdf.cell(0, 9, f'  {tr["sample_count"]}：{prod["sample_count"]}')
             pdf.ln(12)
 
-        pdf.ln(4)
+        pdf.ln(6)
 
         # ── Dimension bar chart ──
-        pdf.set_font('SimHei', size=14)
+        pdf.set_font('SimHei', size=16)
         pdf.set_text_color(102, 126, 234)
         pdf.cell(0, 10, tr['five_dimensions'])
         pdf.ln(10)
         pdf.set_draw_color(102, 126, 234)
         pdf.set_line_width(0.4)
-        pdf.line(pdf.l_margin, pdf.get_y(), pdf.l_margin + 60, pdf.get_y())
-        pdf.ln(5)
+        pdf.line(pdf.l_margin, pdf.get_y(), pdf.w - pdf.r_margin, pdf.get_y())
+        pdf.ln(6)
 
-        max_score = max((d['score'] for d in prod['dimensions']), default=1) or 1
-        bar_max_w = 110
+        bar_max_w = 120
         for dim in prod['dimensions']:
-            pdf.set_font('SimHei', size=10)
+            pdf.set_font('SimHei', size=11)
             pdf.set_text_color(80, 80, 80)
-            pdf.cell(25, 7, dim['name'])
+            pdf.cell(28, 8, dim['name'])
 
-            # Bar background
             x_bar = pdf.get_x()
             y_bar = pdf.get_y() + 1
-            bar_h = 5
+            bar_h = 6
             pdf.set_fill_color(230, 232, 240)
             pdf.rect(x_bar, y_bar, bar_max_w, bar_h, 'F')
 
-            # Bar fill
-            fill_w = max((dim['score'] / max_score) * bar_max_w, 2)
+            fill_w = max((dim['score'] / global_max_score) * bar_max_w, 3)
             r, g, b = dim['color']
             pdf.set_fill_color(r, g, b)
             pdf.rect(x_bar, y_bar, fill_w, bar_h, 'F')
 
-            # Score text
-            pdf.set_x(x_bar + bar_max_w + 3)
-            pdf.set_text_color(60, 60, 60)
-            pdf.set_font('SimHei', size=10)
-            pdf.cell(15, 7, f'{dim["score"]:.2f}')
+            # Score inside bar (white) if bar is wide enough
+            if fill_w > 20:
+                pdf.set_xy(x_bar + 3, y_bar)
+                pdf.set_font('SimHei', size=9)
+                pdf.set_text_color(255, 255, 255)
+                pdf.cell(fill_w - 6, bar_h, f'{dim["score"]:.2f}')
+            else:
+                pdf.set_xy(x_bar + fill_w + 2, y_bar)
+                pdf.set_font('SimHei', size=10)
+                pdf.set_text_color(60, 60, 60)
+                pdf.cell(15, bar_h, f'{dim["score"]:.2f}')
 
-            # Rank badge
+            # Colored rank badge
+            rank = dim['rank']
+            badge_x = x_bar + bar_max_w + 4
+            badge_w = 22
+            bg_r, bg_g, bg_b, fg_r, fg_g, fg_b = rank_colors.get(rank, (230, 230, 230, 120, 120, 130))
+            pdf.set_fill_color(bg_r, bg_g, bg_b)
+            pdf.rect(badge_x, y_bar, badge_w, bar_h, 'F')
+            pdf.set_xy(badge_x, y_bar)
             pdf.set_font('SimHei', size=8)
-            pdf.set_text_color(120, 120, 130)
-            pdf.cell(0, 7, tr['rank_n'].format(dim['rank']))
-            pdf.ln(8)
+            pdf.set_text_color(fg_r, fg_g, fg_b)
+            pdf.cell(badge_w, bar_h, tr['rank_n'].format(rank), align='C')
+
+            pdf.set_y(y_bar + bar_h + 2)
+            pdf.ln(2)
 
         pdf.ln(6)
 
@@ -689,13 +768,13 @@ def _generate_pdf(products: list, lang: str = 'zh') -> FPDF:
         if prod.get('llm_analysis'):
             if pdf.get_y() > pdf.h - 60:
                 pdf.add_page()
-            pdf.set_font('SimHei', size=14)
+            pdf.set_font('SimHei', size=16)
             pdf.set_text_color(102, 126, 234)
-            pdf.cell(0, 10, tr['ai_analysis'])
+            pdf.cell(0, 10, f'[AI] {tr["ai_analysis"]}')
             pdf.ln(10)
             pdf.set_draw_color(102, 126, 234)
             pdf.set_line_width(0.4)
-            pdf.line(pdf.l_margin, pdf.get_y(), pdf.l_margin + 60, pdf.get_y())
+            pdf.line(pdf.l_margin, pdf.get_y(), pdf.w - pdf.r_margin, pdf.get_y())
             pdf.ln(5)
 
             _render_md_blocks(pdf, prod['llm_analysis'])
@@ -706,20 +785,21 @@ def _generate_pdf(products: list, lang: str = 'zh') -> FPDF:
             if pdf.get_y() > pdf.h - 60:
                 pdf.add_page()
 
-            # Light background box
             box_y = pdf.get_y()
-            pdf.set_fill_color(240, 247, 255)
-
-            pdf.set_font('SimHei', size=13)
+            pdf.set_font('SimHei', size=15)
             pdf.set_text_color(45, 108, 162)
-            pdf.cell(0, 9, tr['improvement_suggestions'])
+            pdf.cell(0, 10, f'[!] {tr["improvement_suggestions"]}')
             pdf.ln(10)
 
-            _render_md_blocks(pdf, prod['improvement_suggestions'])
+            # Use distinct dark-teal color for suggestion content
+            suggestions_text = _postprocess_suggestions(prod['improvement_suggestions'])
+            _render_md_blocks(pdf, suggestions_text, text_color=(30, 80, 120))
 
-            # Draw box background behind the section
+            # Draw border around suggestions section
             box_h = pdf.get_y() - box_y
-            # We can't easily draw behind already-rendered content, so skip the background box
+            pdf.set_draw_color(180, 210, 240)
+            pdf.set_line_width(0.5)
+            pdf.rect(pdf.l_margin - 2, box_y - 2, pdf.w - pdf.l_margin - pdf.r_margin + 4, box_h + 4)
             pdf.ln(6)
 
         # Separator between products
@@ -732,16 +812,16 @@ def _generate_pdf(products: list, lang: str = 'zh') -> FPDF:
 
     # ── Footer text ──
     pdf.ln(10)
-    pdf.set_font('SimHei', size=8)
+    pdf.set_font('SimHei', size=9)
     pdf.set_text_color(150, 150, 150)
-    pdf.cell(0, 5, tr['footer_line1'], align='C')
-    pdf.ln(5)
-    pdf.cell(0, 5, tr['footer_line2'], align='C')
+    pdf.cell(0, 6, tr['footer_line1'], align='C')
+    pdf.ln(6)
+    pdf.cell(0, 6, tr['footer_line2'], align='C')
 
     return pdf
 
 
-def _render_report(evaluations, db, lang: str = 'zh'):
+def _render_report(evaluations, db, lang: str = 'zh', for_pdf: bool = False):
     """渲染报告HTML — 内容语言跟随数据集，UI标签跟随请求语言"""
     tr = REPORT_I18N.get(lang, REPORT_I18N['zh'])
     products = []
@@ -780,10 +860,31 @@ def _render_report(evaluations, db, lang: str = 'zh'):
         llm_analysis = e.llm_analysis or ''
         improvement_suggestions = e.improvement_suggestions or ''
 
+        # For PDF: strip 关键行动 sections and time-period patterns
+        if for_pdf:
+            improvement_suggestions = _postprocess_suggestions(improvement_suggestions)
+
+        # Build image URL — convert to base64 data URI for PDF (Playwright can't resolve relative URLs)
+        image_url = ''
+        if product and product.image_url:
+            if for_pdf:
+                rel = product.image_url.lstrip('/')
+                img_filename = os.path.basename(rel)
+                img_path = os.path.join(settings.UPLOAD_DIR, 'images', img_filename)
+                if os.path.isfile(img_path):
+                    ext = img_filename.rsplit('.', 1)[-1].lower()
+                    mime = {'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg',
+                            'gif': 'image/gif', 'webp': 'image/webp'}.get(ext, 'image/png')
+                    with open(img_path, 'rb') as f:
+                        b64 = base64.b64encode(f.read()).decode()
+                    image_url = f'data:{mime};base64,{b64}'
+            else:
+                image_url = product.image_url
+
         products.append({
             'product_id': product.product_id if product else 'N/A',
             'product_name': product.name if product else '',
-            'image_url': product.image_url if product else '',
+            'image_url': image_url,
             'creativity_score': e.creativity_score,
             'sample_count': e.sample_count,
             'dimensions_ranked': dimensions_ranked,

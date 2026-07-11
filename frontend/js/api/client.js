@@ -39,6 +39,8 @@ const authApi = {
   login: (data) => api.post('/auth/login', data),
   getMe: () => api.get('/auth/me'),
   updateMe: (data) => api.put('/auth/me', null, { params: data }),
+  forgotPassword: (email) => api.post('/auth/forgot-password', null, { params: { email } }),
+  resetPassword: (token, newPassword) => api.post('/auth/reset-password', null, { params: { token, new_password: newPassword } }),
 };
 
 // Upload API
@@ -104,6 +106,7 @@ const reportApi = {
     const token = localStorage.getItem('musecrea_token');
     return `${API_BASE}/report/download/${evalId}?token=${encodeURIComponent(token || '')}&lang=${MuseCreaI18n.current}`;
   },
+  sendFeedback: (evaluationId, sentiment, feedbackText) => api.post('/report/feedback', { evaluation_id: evaluationId, sentiment, feedback_text: feedbackText }),
 };
 
 // Billing API
@@ -120,6 +123,7 @@ const adminApi = {
   getStats: () => api.get('/admin/stats'),
   getUsers: (page = 1) => api.get('/admin/users', { params: { page } }),
   toggleUser: (userId) => api.put(`/admin/users/${userId}/toggle-active`),
+  resetPassword: (userId, newPassword) => api.put(`/admin/users/${userId}/reset-password`, null, { params: { new_password: newPassword } }),
   updateCredits: (userId, credits) => api.put(`/admin/users/${userId}/credits`, null, { params: { credits } }),
   getApiLogs: (page = 1) => api.get('/admin/api-logs', { params: { page } }),
   createCoupon: (data) => api.post('/admin/coupons', data),

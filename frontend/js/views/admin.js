@@ -40,21 +40,22 @@ const AdminPage = {
                 <el-tag :type="row.role === 'admin' ? 'danger' : 'info'" size="small">{{ row.role }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="credits" :label="t('admin.credits')" width="80" />
-            <el-table-column prop="evaluation_count" :label="t('admin.evalCount')" width="90" />
-            <el-table-column :label="t('admin.status')" width="80">
+            <el-table-column prop="credits" :label="t('admin.credits')" width="100" />
+            <el-table-column prop="evaluation_count" :label="t('admin.evalCount')" width="120" />
+            <el-table-column :label="t('admin.status')" width="110">
               <template #default="{ row }">
                 <el-tag :type="row.is_active ? 'success' : 'danger'" size="small">
                   {{ row.is_active ? t('admin.statusActive') : t('admin.statusDisabled') }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column :label="t('admin.actions')" width="200" fixed="right">
+            <el-table-column :label="t('admin.actions')" width="260" fixed="right">
               <template #default="{ row }">
                 <el-button link size="small" :type="row.is_active ? 'danger' : 'success'" @click="toggleUser(row)">
                   {{ row.is_active ? t('admin.disable') : t('admin.enable') }}
                 </el-button>
                 <el-button link size="small" type="primary" @click="editCredits(row)">{{ t('admin.adjustCredits') }}</el-button>
+                <el-button link size="small" type="warning" @click="resetPassword(row)">{{ t('admin.resetPwd') }}</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -67,7 +68,7 @@ const AdminPage = {
             <el-table-column prop="product_id" :label="t('admin.productId')" width="100" />
             <el-table-column :label="t('admin.creativity')" width="100">
               <template #default="{ row }">
-                <span style="font-weight:600;color:#667eea;">{{ row.creativity_score?.toFixed(4) }}</span>
+                <span class="score-highlight">{{ row.creativity_score?.toFixed(4) }}</span>
               </template>
             </el-table-column>
             <el-table-column prop="sample_count" :label="t('admin.sampleCount')" width="80" />
@@ -97,12 +98,12 @@ const AdminPage = {
             <el-table-column :label="t('admin.useCount')" width="100">
               <template #default="{ row }">{{ row.used_count }} / {{ row.max_uses }}</template>
             </el-table-column>
-            <el-table-column :label="t('admin.status')" width="80">
+            <el-table-column :label="t('admin.status')" width="110">
               <template #default="{ row }">
                 <el-tag :type="row.is_active ? 'success' : 'info'" size="small">{{ row.is_active ? t('admin.couponValid') : t('admin.couponUsedUp') }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column :label="t('admin.actions')" width="80">
+            <el-table-column :label="t('admin.actions')" width="120">
               <template #default="{ row }">
                 <el-button link size="small" type="danger" @click="deleteCoupon(row)">{{ t('admin.delete') }}</el-button>
               </template>
@@ -187,6 +188,21 @@ const AdminPage = {
       }).catch(() => {});
     };
 
+    const resetPassword = async (user) => {
+      ElementPlus.ElMessageBox.prompt(t('admin.enterNewPassword'), t('admin.resetPwdTitle') + ' - ' + user.username, {
+        inputValue: 'MuseCrea123',
+        inputPattern: /^.{6,}$/,
+        inputErrorMessage: t('admin.passwordMinError'),
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+      }).then(async ({ value }) => {
+        try {
+          await adminApi.resetPassword(user.id, value);
+          ElementPlus.ElMessage.success(t('admin.passwordResetOk'));
+        } catch (e) { ElementPlus.ElMessage.error(e.message); }
+      }).catch(() => {});
+    };
+
     const createCoupon = async () => {
       couponLoading.value = true;
       try {
@@ -207,6 +223,6 @@ const AdminPage = {
       } catch (e) { if (e !== 'cancel') ElementPlus.ElMessage.error(e.message); }
     };
 
-    return { stats, users, logs, coupons, activeTab, showCouponDialog, couponLoading, newCoupon, toggleUser, editCredits, createCoupon, deleteCoupon, t };
+    return { stats, users, logs, coupons, activeTab, showCouponDialog, couponLoading, newCoupon, toggleUser, editCredits, resetPassword, createCoupon, deleteCoupon, t };
   }
 };

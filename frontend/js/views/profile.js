@@ -15,7 +15,7 @@ const ProfilePage = {
           <el-tag :type="user?.role === 'admin' ? 'danger' : 'info'">{{ user?.role === 'admin' ? t('profile.admin') : t('profile.user') }}</el-tag>
         </el-form-item>
         <el-form-item :label="t('profile.remainingCredits')">
-          <span style="font-size:20px;font-weight:700;color:#667eea;">{{ user?.credits || 0 }}</span>
+          <span class="profile-credits">{{ user?.credits || 0 }}</span>
           <span class="text-light" style="margin-left:8px;font-size:13px;">{{ t('profile.evalOpportunities') }}</span>
         </el-form-item>
         <el-form-item :label="t('profile.fullName')">

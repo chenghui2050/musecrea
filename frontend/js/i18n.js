@@ -43,6 +43,10 @@ const MuseCreaI18n = {
       'common.requestFailed': '请求失败',
       'common.networkError': '网络连接失败',
 
+      // ── Footer ──
+      'footer.author': '作者：程辉  浙江财经大学东方学院',
+      'footer.wechat': '关注微信公众号「文创学者程辉」',
+
       // ── Dimensions ──
       'dim.novelty': '新颖度',
       'dim.usefulness': '有用性',
@@ -79,6 +83,8 @@ const MuseCreaI18n = {
       'nav.logout': '退出登录',
       'nav.defaultUser': '用户',
       'nav.credits': '次',
+      'nav.lightMode': '切换亮色模式',
+      'nav.darkMode': '切换暗色模式',
 
       // ── Auth ──
       'auth.welcome': '欢迎回来',
@@ -108,6 +114,25 @@ const MuseCreaI18n = {
       'auth.enterEmail': '请输入邮箱',
       'auth.passwordMismatch': '两次密码不一致',
       'auth.confirmPasswordRequired': '请确认密码',
+      'auth.forgotPassword': '忘记密码？',
+      'auth.rememberPwd': '记住密码',
+      'auth.forgotPasswordTitle': '忘记密码',
+      'auth.forgotPasswordDesc': '输入注册邮箱，我们将发送密码重置链接',
+      'auth.sendResetLink': '发送重置链接',
+      'auth.resetLinkSent': '邮件已发送',
+      'auth.resetLinkSentDesc': '如果该邮箱已注册，请查收重置密码邮件（含垃圾箱）',
+      'auth.backToLogin': '← 返回登录',
+      'auth.resetPasswordTitle': '重置密码',
+      'auth.resetPasswordDesc': '请输入新密码（至少6个字符）',
+      'auth.newPassword': '新密码',
+      'auth.resetPasswordBtn': '重置密码',
+      'auth.resetSuccess': '密码重置成功',
+      'auth.resetSuccessDesc': '请使用新密码登录',
+      'auth.goLogin': '去登录',
+      'auth.resetFailed': '重置失败',
+      'auth.resendLink': '重新发送重置链接',
+      'auth.invalidResetToken': '重置链接无效或已过期',
+      'auth.enterNewPassword': '请输入新密码',
 
       // ── Dashboard ──
       'dash.totalEvals': '累计评价次数',
@@ -189,11 +214,20 @@ const MuseCreaI18n = {
       'results.changeImage': '更换图片',
       'results.uploadImage': '上传图片',
       'results.dimRanking': '五维度得分排名',
+      'results.maxScoreNote': '满分 = 7.00',
       'results.rankN': '第{0}名',
       'results.aiAnalysis': 'AI 消费者洞察分析',
       'results.suggestions': '综合改进建议',
       'results.noResults': '暂无评价结果',
       'results.startEval': '开始评价',
+      'results.fbTitle': '这份评价对您有帮助吗？',
+      'results.fbDesc': '您的反馈将帮助我们持续优化评价质量',
+      'results.fbPlaceholder': '请分享您的看法或改进建议（选填）',
+      'results.fbEmail': '邮箱地址（选填）',
+      'results.fbPrivacy': '您的个人信息将被严格保护，仅用于反馈回复',
+      'results.fbSend': '提交反馈',
+      'results.fbSuccess': '感谢您的反馈！',
+      'results.fbFailed': '反馈提交失败，请稍后重试',
 
       // ── Report ──
       'report.title': '评价报告',
@@ -203,6 +237,12 @@ const MuseCreaI18n = {
       'report.downloadPdf': '下载PDF报告',
       'report.noReport': '请从历史评价记录中选择一个评价来生成报告',
       'report.viewHistory': '查看历史',
+      'report.feedbackTitle': '报告反馈',
+      'report.feedbackDesc': '您对这份报告满意吗？您的反馈将帮助我们改进',
+      'report.feedbackPlaceholder': '请写下您的反馈意见（可选）...',
+      'report.sendFeedback': '发送反馈',
+      'report.feedbackSent': '感谢您的反馈！',
+      'report.feedbackFailed': '反馈发送失败，请稍后重试',
 
       // ── History ──
       'hist.title': '历史评价记录',
@@ -303,6 +343,11 @@ const MuseCreaI18n = {
       'admin.couponCreated': '券码创建成功',
       'admin.confirmDeleteCoupon': '确定删除此券码？',
       'admin.deleted': '已删除',
+      'admin.resetPwd': '重置密码',
+      'admin.resetPwdTitle': '重置密码',
+      'admin.enterNewPassword': '请输入新密码（至少6位，默认 MuseCrea123）',
+      'admin.passwordMinError': '密码至少需要6个字符',
+      'admin.passwordResetOk': '密码重置成功',
 
       // ── Image Library ──
       'imglib.title': '产品图片库',
@@ -355,7 +400,7 @@ const MuseCreaI18n = {
       'auth.min6chars': '至少6个字符',
       'auth.passwordMin': '密码（至少6位）',
       'auth.phoneOptional': '手机号（可选）',
-      'hist.images': '图片',
+      'hist.images': '更换图片',
       'imglib.assignSuccessPrefix': '已将',
       'imglib.assignSuccessTo': '分配给产品',
       'imglib.cancel': '取消',
@@ -419,6 +464,10 @@ const MuseCreaI18n = {
       'common.requestFailed': 'Request failed',
       'common.networkError': 'Network connection failed',
 
+      // ── Footer ──
+      'footer.author': 'Author: Cheng Hui  Zhejiang University of Finance & Economics Dongfang College',
+      'footer.wechat': 'Follow WeChat Official Account "文创学者程辉"',
+
       // ── Dimensions ──
       'dim.novelty': 'Novelty',
       'dim.usefulness': 'Usefulness',
@@ -455,6 +504,8 @@ const MuseCreaI18n = {
       'nav.logout': 'Logout',
       'nav.defaultUser': 'User',
       'nav.credits': 'credits',
+      'nav.lightMode': 'Switch to Light Mode',
+      'nav.darkMode': 'Switch to Dark Mode',
 
       // ── Auth ──
       'auth.welcome': 'Welcome Back',
@@ -484,6 +535,25 @@ const MuseCreaI18n = {
       'auth.enterEmail': 'Please enter email',
       'auth.passwordMismatch': 'Passwords do not match',
       'auth.confirmPasswordRequired': 'Please confirm password',
+      'auth.forgotPassword': 'Forgot password?',
+      'auth.rememberPwd': 'Remember password',
+      'auth.forgotPasswordTitle': 'Forgot Password',
+      'auth.forgotPasswordDesc': 'Enter your registered email and we will send you a password reset link',
+      'auth.sendResetLink': 'Send Reset Link',
+      'auth.resetLinkSent': 'Email Sent',
+      'auth.resetLinkSentDesc': 'If the email is registered, please check your inbox (and spam folder) for the reset link',
+      'auth.backToLogin': '← Back to Login',
+      'auth.resetPasswordTitle': 'Reset Password',
+      'auth.resetPasswordDesc': 'Enter your new password (at least 6 characters)',
+      'auth.newPassword': 'New Password',
+      'auth.resetPasswordBtn': 'Reset Password',
+      'auth.resetSuccess': 'Password Reset Successful',
+      'auth.resetSuccessDesc': 'Please login with your new password',
+      'auth.goLogin': 'Go to Login',
+      'auth.resetFailed': 'Reset Failed',
+      'auth.resendLink': 'Resend Reset Link',
+      'auth.invalidResetToken': 'Reset link is invalid or expired',
+      'auth.enterNewPassword': 'Please enter new password',
 
       // ── Dashboard ──
       'dash.totalEvals': 'Total Evaluations',
@@ -565,11 +635,20 @@ const MuseCreaI18n = {
       'results.changeImage': 'Change Image',
       'results.uploadImage': 'Upload Image',
       'results.dimRanking': 'Five-Dimension Score Ranking',
+      'results.maxScoreNote': 'Full Score = 7.00',
       'results.rankN': 'Rank {0}',
       'results.aiAnalysis': 'AI Consumer Insight Analysis',
       'results.suggestions': 'Improvement Suggestions',
       'results.noResults': 'No evaluation results',
       'results.startEval': 'Start Evaluation',
+      'results.fbTitle': 'Was this evaluation helpful?',
+      'results.fbDesc': 'Your feedback helps us continuously improve evaluation quality',
+      'results.fbPlaceholder': 'Share your thoughts or suggestions (optional)',
+      'results.fbEmail': 'Email address (optional)',
+      'results.fbPrivacy': 'Your personal information is strictly protected and used only for feedback replies',
+      'results.fbSend': 'Submit Feedback',
+      'results.fbSuccess': 'Thank you for your feedback!',
+      'results.fbFailed': 'Failed to submit feedback. Please try again later',
 
       // ── Report ──
       'report.title': 'Evaluation Report',
@@ -579,6 +658,12 @@ const MuseCreaI18n = {
       'report.downloadPdf': 'Download PDF Report',
       'report.noReport': 'Please select an evaluation from history to generate a report',
       'report.viewHistory': 'View History',
+      'report.feedbackTitle': 'Report Feedback',
+      'report.feedbackDesc': 'Are you satisfied with this report? Your feedback helps us improve',
+      'report.feedbackPlaceholder': 'Write your feedback here (optional)...',
+      'report.sendFeedback': 'Send Feedback',
+      'report.feedbackSent': 'Thank you for your feedback!',
+      'report.feedbackFailed': 'Failed to send feedback, please try again later',
 
       // ── History ──
       'hist.title': 'Evaluation History',
@@ -679,6 +764,11 @@ const MuseCreaI18n = {
       'admin.couponCreated': 'Coupon created successfully',
       'admin.confirmDeleteCoupon': 'Delete this coupon?',
       'admin.deleted': 'Deleted',
+      'admin.resetPwd': 'Reset Pwd',
+      'admin.resetPwdTitle': 'Reset Password',
+      'admin.enterNewPassword': 'Enter new password (min 6 chars, default MuseCrea123)',
+      'admin.passwordMinError': 'Password must be at least 6 characters',
+      'admin.passwordResetOk': 'Password reset successful',
 
       // ── Image Library ──
       'imglib.title': 'Product Image Library',
@@ -731,7 +821,7 @@ const MuseCreaI18n = {
       'auth.min6chars': 'At least 6 characters',
       'auth.passwordMin': 'Password (at least 6 characters)',
       'auth.phoneOptional': 'Phone (optional)',
-      'hist.images': 'Image',
+      'hist.images': 'Change Image',
       'imglib.assignSuccessPrefix': 'Assigned',
       'imglib.assignSuccessTo': 'to product',
       'imglib.cancel': 'Cancel',

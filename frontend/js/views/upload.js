@@ -27,25 +27,25 @@ const UploadPage = {
 
     <!-- Step 1: Upload File -->
     <div v-if="step === 1" class="section-card">
-      <h2>📤 {{ t('upload.title1') }}</h2>
-      <p style="color:#666;margin-bottom:20px;font-size:14px">
+      <h2><span class="px-icon px-upload"></span> {{ t('upload.title1') }}</h2>
+      <p class="text-light" style="margin-bottom:20px;font-size:14px">
         {{ t('upload.desc1') }}
       </p>
       <div class="upload-zone" @click="triggerFileInput" @dragover.prevent @drop.prevent="handleDrop">
-        <div class="upload-icon">📁</div>
+        <div class="upload-icon"><span class="px-icon px-icon-lg px-folder"></span></div>
         <h3>{{ t('upload.dropzone') }}</h3>
         <p>{{ t('upload.formats') }}</p>
         <input ref="fileInput" type="file" accept=".xlsx,.xls,.csv" style="display:none" @change="handleFileSelect">
       </div>
       <div v-if="uploadProgress > 0 && uploadProgress < 100" style="margin-top:20px">
         <el-progress :percentage="uploadProgress" :stroke-width="8" />
-        <p style="text-align:center;color:#999;margin-top:8px">{{ t('upload.parsing') }}</p>
+        <p class="text-muted" style="text-align:center;margin-top:8px">{{ t('upload.parsing') }}</p>
       </div>
     </div>
 
     <!-- Step 1.5: Preview & Warnings -->
     <div v-if="step === 1 && preview" class="section-card" style="margin-top:20px">
-      <h2>📋 {{ t('upload.preview') }}</h2>
+      <h2><span class="px-icon px-clip"></span> {{ t('upload.preview') }}</h2>
       <el-descriptions :column="2" border>
         <el-descriptions-item :label="t('upload.fileName')">{{ filename }}</el-descriptions-item>
         <el-descriptions-item :label="t('upload.totalRows')">{{ preview.total_rows }}</el-descriptions-item>
@@ -67,7 +67,7 @@ const UploadPage = {
 
     <!-- Step 2: Select Products -->
     <div v-if="step === 2" class="section-card">
-      <h2>🎯 {{ t('upload.title2') }}</h2>
+      <h2><span class="px-icon px-target"></span> {{ t('upload.title2') }}</h2>
       <div style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
         <span class="text-light">{{ t('upload.productSummary', preview.products.length, selectedProducts.length) }}</span>
         <el-button type="primary" link @click="toggleSelectAll">
@@ -94,7 +94,7 @@ const UploadPage = {
               </div>
             </div>
             <div v-else class="product-img-dropzone" @click="openImagePicker(pid)">
-              <span class="img-upload-icon">📷</span>
+              <span class="img-upload-icon"><span class="px-icon px-cam"></span></span>
               <span class="img-upload-text">{{ t('upload.clickUpload') }}</span>
             </div>
           </div>
@@ -118,10 +118,9 @@ const UploadPage = {
       <el-descriptions :column="1" border style="margin-bottom:20px">
         <el-descriptions-item :label="t('upload.selectedProducts')">
           <div style="display:flex;flex-wrap:wrap;gap:8px;">
-            <span v-for="pid in selectedProducts" :key="pid"
-              style="display:inline-flex;align-items:center;gap:4px;background:#f0f2ff;padding:4px 12px;border-radius:16px;font-size:13px;">
-              <span v-if="productImagePreviews[pid]" style="color:#67c23a;">📷</span>
-              <span v-else style="color:#ccc;">📷</span>
+            <span v-for="pid in selectedProducts" :key="pid" class="product-chip">
+              <span v-if="productImagePreviews[pid]" style="color:#05ffa1;"><span class="px-icon px-cam" style="display:inline"></span></span>
+              <span v-else class="text-muted"><span class="px-icon px-cam" style="display:inline"></span></span>
               {{ pid }}
             </span>
           </div>
@@ -132,12 +131,12 @@ const UploadPage = {
 
       <div style="margin-bottom:20px">
         <el-checkbox v-model="runLlm" size="large">
-          🤖 {{ t('upload.enableLlm') }}
+          <span class="px-icon px-bot"></span> {{ t('upload.enableLlm') }}
         </el-checkbox>
       </div>
 
       <div class="cost-preview">
-        <h3 style="margin-bottom:12px;font-size:15px;">💰 {{ t('upload.costEstimate') }}</h3>
+        <h3 style="margin-bottom:12px;font-size:15px;"><span class="px-icon px-coin"></span> {{ t('upload.costEstimate') }}</h3>
         <div class="cost-row">
           <span>{{ t('upload.evalCalc', selectedProducts.length) }}</span>
           <span>{{ selectedProducts.length }} {{ t('upload.timesUnit') }}</span>
@@ -152,7 +151,7 @@ const UploadPage = {
         </div>
         <div class="cost-row">
           <span>{{ t('upload.currentBalance') }}</span>
-          <span :style="{ color: userCredits >= totalCost ? '#67c23a' : '#f56c6c' }">{{ userCredits }} {{ t('upload.timesUnit') }}</span>
+          <span :style="{ color: userCredits >= totalCost ? '#05ffa1' : '#ff2a6d' }">{{ userCredits }} {{ t('upload.timesUnit') }}</span>
         </div>
       </div>
 
@@ -161,7 +160,7 @@ const UploadPage = {
       <div style="text-align:center;margin-top:24px;display:flex;gap:12px;justify-content:center;">
         <el-button size="large" @click="step = 2">← {{ t('upload.prevStep') }}</el-button>
         <el-button type="primary" size="large" :loading="running" :disabled="userCredits < totalCost" @click="runEvaluation">
-          🚀 {{ t('upload.startEval') }}
+          <span class="px-icon px-rocket"></span> {{ t('upload.startEval') }}
         </el-button>
       </div>
     </div>
@@ -174,11 +173,11 @@ const UploadPage = {
     </div>
 
     <div v-if="step === 4 && !running && results.length > 0" class="section-card text-center">
-      <div style="font-size:48px;margin-bottom:16px">🎉</div>
+      <div style="font-size:48px;margin-bottom:16px"><span class="px-icon px-icon-xl px-party"></span></div>
       <h2>{{ t('upload.done') }}</h2>
       <p class="text-light" style="margin:12px 0 24px">{{ t('upload.doneSummary', results.length, totalCost) }}</p>
       <div style="display:flex;gap:12px;justify-content:center;">
-        <el-button type="primary" size="large" @click="viewResults">📊 {{ t('upload.viewResults') }}</el-button>
+        <el-button type="primary" size="large" @click="viewResults"><span class="px-icon px-bar"></span> {{ t('upload.viewResults') }}</el-button>
         <el-button size="large" @click="$router.push('/dashboard')">{{ t('upload.backHome') }}</el-button>
       </div>
     </div>

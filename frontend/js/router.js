@@ -9,22 +9,22 @@ const LandingPage = {
     <p class="tagline">{{ t('landing.tagline') }}</p>
     <div class="features">
       <div class="feature-card">
-        <div class="icon">📊</div>
+        <div class="icon"><span class="px-icon px-icon-lg px-bar"></span></div>
         <h3>{{ t('landing.feat1.title') }}</h3>
         <p>{{ t('landing.feat1.desc') }}</p>
       </div>
       <div class="feature-card">
-        <div class="icon">🤖</div>
+        <div class="icon"><span class="px-icon px-icon-lg px-bot"></span></div>
         <h3>{{ t('landing.feat2.title') }}</h3>
         <p>{{ t('landing.feat2.desc') }}</p>
       </div>
       <div class="feature-card">
-        <div class="icon">📈</div>
+        <div class="icon"><span class="px-icon px-icon-lg px-chartup"></span></div>
         <h3>{{ t('landing.feat3.title') }}</h3>
         <p>{{ t('landing.feat3.desc') }}</p>
       </div>
       <div class="feature-card">
-        <div class="icon">🔒</div>
+        <div class="icon"><span class="px-icon px-icon-lg px-lock"></span></div>
         <h3>{{ t('landing.feat4.title') }}</h3>
         <p>{{ t('landing.feat4.desc') }}</p>
       </div>
@@ -34,7 +34,7 @@ const LandingPage = {
       <button class="cta-btn cta-secondary" onclick="location.hash='#/login'">{{ t('landing.login') }}</button>
     </div>
     <div style="position:absolute;top:20px;right:20px;">
-      <button @click="toggleLang" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;">{{ currentLang === 'zh' ? 'English' : '中文' }}</button>
+      <button @click="toggleLang" class="lang-toggle-btn">{{ currentLang === 'zh' ? 'English' : '中文' }}</button>
     </div>
   </div>
   `,
@@ -62,6 +62,8 @@ const router = createRouter({
     { path: '/', component: LandingPage },
     { path: '/login', component: LoginPage },
     { path: '/register', component: RegisterPage },
+    { path: '/forgot-password', component: ForgotPasswordPage },
+    { path: '/reset-password', component: ResetPasswordPage },
     {
       path: '/',
       component: AppLayout,

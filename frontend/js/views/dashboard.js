@@ -4,28 +4,28 @@ const DashboardPage = {
   <div>
     <div class="dashboard-grid">
       <div class="stat-card">
-        <div class="stat-icon" style="background:#f0f2ff;color:#667eea">📊</div>
+        <div class="stat-icon stat-icon--eval"><svg width="36" height="36" viewBox="0 0 36 36" shape-rendering="crispEdges"><rect x="6" y="3" width="24" height="3" fill="#f7d51d"/><rect x="6" y="6" width="3" height="3" fill="#f7d51d"/><rect x="27" y="6" width="3" height="3" fill="#f7d51d"/><rect x="6" y="9" width="3" height="3" fill="#f7d51d"/><rect x="27" y="9" width="3" height="3" fill="#f7d51d"/><rect x="6" y="12" width="3" height="3" fill="#f7d51d"/><rect x="12" y="12" width="12" height="3" fill="#f7d51d"/><rect x="27" y="12" width="3" height="3" fill="#f7d51d"/><rect x="6" y="15" width="3" height="3" fill="#f7d51d"/><rect x="27" y="15" width="3" height="3" fill="#f7d51d"/><rect x="6" y="18" width="3" height="3" fill="#f7d51d"/><rect x="12" y="18" width="12" height="3" fill="#f7d51d"/><rect x="27" y="18" width="3" height="3" fill="#f7d51d"/><rect x="6" y="21" width="3" height="3" fill="#f7d51d"/><rect x="27" y="21" width="3" height="3" fill="#f7d51d"/><rect x="6" y="24" width="3" height="3" fill="#f7d51d"/><rect x="12" y="24" width="12" height="3" fill="#f7d51d"/><rect x="27" y="24" width="3" height="3" fill="#f7d51d"/><rect x="6" y="27" width="3" height="3" fill="#f7d51d"/><rect x="27" y="27" width="3" height="3" fill="#f7d51d"/><rect x="6" y="30" width="24" height="3" fill="#f7d51d"/></svg></div>
         <div class="stat-info">
           <h3>{{ stats.totalEvaluations }}</h3>
           <p>{{ t('dash.totalEvals') }}</p>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background:#fff3e0;color:#e6a23c">⭐</div>
+        <div class="stat-icon stat-icon--score"><svg width="36" height="36" viewBox="0 0 36 36" shape-rendering="crispEdges"><rect x="15" y="3" width="6" height="3" fill="#f7d51d"/><rect x="15" y="6" width="6" height="3" fill="#f7d51d"/><rect x="9" y="9" width="18" height="3" fill="#f7d51d"/><rect x="6" y="12" width="24" height="3" fill="#f7d51d"/><rect x="9" y="15" width="18" height="3" fill="#f7d51d"/><rect x="12" y="18" width="12" height="3" fill="#f7d51d"/><rect x="9" y="21" width="3" height="3" fill="#f7d51d"/><rect x="24" y="21" width="3" height="3" fill="#f7d51d"/><rect x="6" y="24" width="3" height="3" fill="#f7d51d"/><rect x="27" y="24" width="3" height="3" fill="#f7d51d"/></svg></div>
         <div class="stat-info">
           <h3>{{ stats.avgScore || '--' }}</h3>
           <p>{{ t('dash.avgScore') }}</p>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background:#e8f5e9;color:#67c23a">💰</div>
+        <div class="stat-icon stat-icon--credits"><svg width="36" height="36" viewBox="0 0 36 36" shape-rendering="crispEdges"><rect x="18" y="3" width="12" height="3" fill="#f7d51d"/><rect x="15" y="6" width="12" height="3" fill="#f7d51d"/><rect x="12" y="9" width="12" height="3" fill="#f7d51d"/><rect x="9" y="12" width="12" height="3" fill="#f7d51d"/><rect x="6" y="15" width="24" height="3" fill="#f7d51d"/><rect x="15" y="18" width="12" height="3" fill="#f7d51d"/><rect x="12" y="21" width="12" height="3" fill="#f7d51d"/><rect x="9" y="24" width="12" height="3" fill="#f7d51d"/><rect x="6" y="27" width="12" height="3" fill="#f7d51d"/></svg></div>
         <div class="stat-info">
           <h3>{{ user?.credits || 0 }}</h3>
           <p>{{ t('dash.remaining') }}</p>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background:#fce4ec;color:#f56c6c">📁</div>
+        <div class="stat-icon stat-icon--products"><svg width="36" height="36" viewBox="0 0 36 36" shape-rendering="crispEdges"><rect x="6" y="3" width="12" height="3" fill="#f7d51d"/><rect x="21" y="3" width="12" height="3" fill="#f7d51d"/><rect x="6" y="6" width="12" height="3" fill="#f7d51d"/><rect x="21" y="6" width="12" height="3" fill="#f7d51d"/><rect x="6" y="9" width="12" height="3" fill="#f7d51d"/><rect x="21" y="9" width="12" height="3" fill="#f7d51d"/><rect x="6" y="12" width="12" height="3" fill="#f7d51d"/><rect x="21" y="12" width="12" height="3" fill="#f7d51d"/><rect x="6" y="18" width="12" height="3" fill="#f7d51d"/><rect x="21" y="18" width="12" height="3" fill="#f7d51d"/><rect x="6" y="21" width="12" height="3" fill="#f7d51d"/><rect x="21" y="21" width="12" height="3" fill="#f7d51d"/><rect x="6" y="24" width="12" height="3" fill="#f7d51d"/><rect x="21" y="24" width="12" height="3" fill="#f7d51d"/><rect x="6" y="27" width="12" height="3" fill="#f7d51d"/><rect x="21" y="27" width="12" height="3" fill="#f7d51d"/></svg></div>
         <div class="stat-info">
           <h3>{{ stats.totalProducts }}</h3>
           <p>{{ t('dash.totalProducts') }}</p>
@@ -33,22 +33,22 @@ const DashboardPage = {
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <div class="dashboard-two-col">
       <div class="section-card">
-        <h2>🚀 {{ t('dash.quickStart') }}</h2>
-        <p style="color:#666;margin-bottom:20px;font-size:14px">{{ t('dash.quickStartDesc') }}</p>
+        <h2><span class="px-icon px-rocket"></span> {{ t('dash.quickStart') }}</h2>
+        <p class="text-light" style="margin-bottom:20px;font-size:14px">{{ t('dash.quickStartDesc') }}</p>
         <el-button type="primary" size="large" @click="$router.push('/upload')" style="width:100%">
-          📤 {{ t('dash.uploadStart') }}
+          <span class="px-icon px-upload"></span> {{ t('dash.uploadStart') }}
         </el-button>
         <div style="margin-top:16px;display:flex;gap:10px;">
-          <el-button @click="$router.push('/history')" style="flex:1">📋 {{ t('dash.viewHistory') }}</el-button>
-          <el-button @click="showCouponDialog = true" style="flex:1">🎫 {{ t('dash.redeemCoupon') }}</el-button>
+          <el-button @click="$router.push('/history')" style="flex:1"><span class="px-icon px-clip"></span> {{ t('dash.viewHistory') }}</el-button>
+          <el-button @click="showCouponDialog = true" style="flex:1"><span class="px-icon px-ticket"></span> {{ t('dash.redeemCoupon') }}</el-button>
         </div>
       </div>
 
       <div class="section-card">
-        <h2>📈 {{ t('dash.recentEvals') }}</h2>
-        <div v-if="recentEvals.length === 0" style="color:#999;text-align:center;padding:30px">{{ t('dash.noRecords') }}</div>
+        <h2><span class="px-icon px-chartup"></span> {{ t('dash.recentEvals') }}</h2>
+        <div v-if="recentEvals.length === 0" class="text-muted" style="text-align:center;padding:30px">{{ t('dash.noRecords') }}</div>
         <div v-for="e in recentEvals" :key="e.id" class="history-item" @click="$router.push('/results/' + e.id)">
           <span class="h-product">{{ e.product_id }}</span>
           <span class="h-score">{{ e.creativity_score?.toFixed(2) }}</span>

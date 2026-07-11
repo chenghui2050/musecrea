@@ -1,8 +1,9 @@
 import os
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from app.database import engine, Base
 from app.config import settings
 from app.api import auth, upload, evaluation, report, billing, admin
@@ -15,6 +16,18 @@ app = FastAPI(
     version=settings.APP_VERSION,
     description="MuseCrea - Museum Cultural Creative Product Evaluation Platform",
 )
+
+# No-cache middleware for development
+class NoCacheMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        if not request.url.path.startswith("/api/") and not request.url.path.startswith("/uploads/"):
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+        return response
+
+app.add_middleware(NoCacheMiddleware)
 
 # CORS
 app.add_middleware(
@@ -48,9 +61,30 @@ def health_check():
 
 
 # Serve frontend
+def _no_cache_response(file_path, media_type):
+    """Return file content with no-cache headers to prevent browser caching."""
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        }
+    )
+
+def _get_media_type(path):
+    if path.endswith(".html"): return "text/html; charset=utf-8"
+    if path.endswith(".css"): return "text/css; charset=utf-8"
+    if path.endswith(".js"): return "application/javascript; charset=utf-8"
+    if path.endswith(".json"): return "application/json; charset=utf-8"
+    return "application/octet-stream"
+
 @app.get("/")
 async def serve_frontend():
-    return FileResponse(os.path.join(frontend_dir, "index.html"))
+    return _no_cache_response(os.path.join(frontend_dir, "index.html"), "text/html; charset=utf-8")
 
 
 @app.get("/{full_path:path}")
@@ -60,5 +94,8 @@ async def serve_frontend_routes(full_path: str):
         return
     file_path = os.path.join(frontend_dir, full_path)
     if os.path.isfile(file_path):
-        return FileResponse(file_path)
-    return FileResponse(os.path.join(frontend_dir, "index.html"))
+        media_type = _get_media_type(file_path)
+        if media_type == "application/octet-stream":
+            return FileResponse(file_path)
+        return _no_cache_response(file_path, media_type)
+    return _no_cache_response(os.path.join(frontend_dir, "index.html"), "text/html; charset=utf-8")

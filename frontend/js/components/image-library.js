@@ -7,12 +7,12 @@ const ImageLibraryModal = {
       <div class="img-lib-upload" @click="triggerUpload" @dragover.prevent @drop.prevent="handleDrop">
         <div v-if="uploading" style="text-align:center">
           <el-progress type="circle" :percentage="uploadProgress" :width="60" />
-          <p style="margin-top:8px;font-size:13px;color:#999">{{ t('imglib.uploading') }}</p>
+          <p class="text-muted" style="margin-top:8px;font-size:13px">{{ t('imglib.uploading') }}</p>
         </div>
         <div v-else style="text-align:center;padding:20px">
-          <div style="font-size:36px;margin-bottom:8px">📤</div>
-          <p style="font-size:14px;color:#666">{{ t('imglib.dropzone') }}</p>
-          <p style="font-size:12px;color:#999;margin-top:4px">{{ t('imglib.formats') }}</p>
+          <div style="font-size:36px;margin-bottom:8px"><span class="px-icon px-icon-xl px-upload"></span></div>
+          <p class="text-light" style="font-size:14px">{{ t('imglib.dropzone') }}</p>
+          <p class="text-muted" style="font-size:12px;margin-top:4px">{{ t('imglib.formats') }}</p>
           <div style="margin-top:12px;display:flex;justify-content:center;gap:8px;align-items:center;" @click.stop>
             <el-input v-model="uploadProductId" :placeholder="t('imglib.productIdPlaceholder')" size="small" style="width:200px" clearable />
           </div>
@@ -22,19 +22,19 @@ const ImageLibraryModal = {
 
       <!-- Folder Info Hint -->
       <div style="margin:12px 0;">
-        <div style="cursor:pointer;font-size:13px;color:#409eff;user-select:none;" @click="showTips = !showTips">
+        <div class="imglib-tips-toggle" @click="showTips = !showTips">
           {{ t('imglib.tipsToggle') }} {{ showTips ? '▲' : '▼' }}
         </div>
-        <div v-if="showTips" style="font-size:13px;color:#666;line-height:1.8;padding:8px 0;">
+        <div v-if="showTips" class="imglib-tips-content">
           <p><strong>{{ t('imglib.tipDirectTitle') }}</strong> — {{ t('imglib.tipDirectDesc') }}</p>
           <p><strong>{{ t('imglib.tipFolderTitle') }}</strong> — {{ t('imglib.tipFolderDesc') }}</p>
-          <div v-if="folderPath" style="background:#f5f7fa;padding:8px 12px;border-radius:6px;margin:4px 0;font-family:monospace;font-size:12px;">
-            📂 {{ folderPath }}
+          <div v-if="folderPath" class="imglib-folder-path">
+            <span class="px-icon px-folder"></span> {{ folderPath }}
           </div>
           <p style="margin-top:6px">{{ t('imglib.tipNaming') }}</p>
           <p>{{ t('imglib.tipFormats') }}</p>
-          <p v-if="!folderExists" style="color:#e6a23c;margin-top:6px">{{ t('imglib.tipNoFolder') }}</p>
-          <p v-else style="color:#67c23a;margin-top:6px">{{ t('imglib.tipFolderReady') }} {{ images.length }} {{ t('imglib.tipImageCount') }}</p>
+          <p v-if="!folderExists" style="color:#fcee0a;margin-top:6px">{{ t('imglib.tipNoFolder') }}</p>
+          <p v-else style="color:#05ffa1;margin-top:6px">{{ t('imglib.tipFolderReady') }} {{ images.length }} {{ t('imglib.tipImageCount') }}</p>
         </div>
       </div>
 
@@ -42,8 +42,8 @@ const ImageLibraryModal = {
       <div v-if="loading" style="text-align:center;padding:40px">
         <el-skeleton :rows="3" animated />
       </div>
-      <div v-else-if="images.length === 0" style="text-align:center;padding:40px;color:#999">
-        <div style="font-size:48px;margin-bottom:12px">🖼️</div>
+      <div v-else-if="images.length === 0" class="text-muted" style="text-align:center;padding:40px">
+        <div style="font-size:48px;margin-bottom:12px"><span class="px-icon px-icon-xl px-museum"></span></div>
         <p>{{ t('imglib.empty') }}</p>
       </div>
       <div v-else class="img-lib-grid">

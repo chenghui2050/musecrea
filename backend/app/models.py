@@ -22,6 +22,8 @@ class User(Base):
     role = Column(String(20), default=UserRole.user)
     credits = Column(Integer, default=3)  # 免费次数
     is_active = Column(Boolean, default=True)
+    reset_token = Column(String(255), nullable=True)
+    reset_token_expires = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

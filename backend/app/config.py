@@ -32,6 +32,15 @@ class Settings(BaseSettings):
     YEARLY_PLAN_PRICE: float = 399.0  # 年费
     YEARLY_PLAN_EVALUATIONS: int = 800  # 年计划评价次数
 
+    # SMTP Email (for password reset)
+    SMTP_HOST: str = "smtp.qq.com"
+    SMTP_PORT: int = 465
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = ""
+    SMTP_FROM_NAME: str = "MuseCrea"
+    RESET_TOKEN_EXPIRE_HOURS: int = 1
+
     # File upload
     MAX_UPLOAD_SIZE_MB: int = 20
     UPLOAD_DIR: str = "uploads"
