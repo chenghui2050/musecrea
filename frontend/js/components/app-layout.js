@@ -72,7 +72,7 @@ const AppLayout = {
           <span>{{ t('footer.wechat') }}</span>
         </span>
       </div>
-      <div class="footer-version">MuseCrea V3.0 · 2026-07-11</div>
+      <div class="footer-version">MuseCrea V4.0 · 2026-07-11</div>
     </footer>
   </div>
   `,

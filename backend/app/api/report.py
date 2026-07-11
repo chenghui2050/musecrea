@@ -95,22 +95,22 @@ REPORT_TEMPLATE = """
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'ChineseFont', 'Microsoft YaHei', 'SimHei', 'PingFang SC', sans-serif; background: #f5f7fa; color: #2c3e50; line-height: 1.6; }
   .container { max-width: 100%; margin: 0 auto; padding: 20px 40px; }
-  .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 28px 30px; border-radius: 12px; margin-bottom: 20px; }
+  .header { background: #209cee; color: white; padding: 28px 30px; border-radius: 0; margin-bottom: 20px; border: 4px solid #000; box-shadow: 4px 4px 0 #000; }
   .header h1 { font-size: 24px; margin-bottom: 6px; }
   .header .subtitle { font-size: 13px; opacity: 0.85; }
   .header .meta { display: flex; gap: 20px; margin-top: 14px; font-size: 13px; opacity: 0.9; }
-  .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-  .card h2 { font-size: 20px; color: #2c3e50; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #667eea; }
+  .card { background: white; border-radius: 0; padding: 24px; margin-bottom: 16px; border: 4px solid #000; box-shadow: 4px 4px 0 #000; }
+  .card h2 { font-size: 20px; color: #2c3e50; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 4px solid #209cee; }
   .product-section { margin-bottom: 24px; }
   .product-header { display: flex; align-items: center; gap: 20px; margin-bottom: 24px; }
-  .product-image { width: 120px; height: 120px; object-fit: cover; border-radius: 12px; border: 2px solid #eee; }
-  .score-badge { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 8px 20px; border-radius: 20px; font-size: 18px; font-weight: bold; }
+  .product-image { width: 120px; height: 120px; object-fit: cover; border-radius: 0; border: 4px solid #000; }
+  .score-badge { display: inline-flex; align-items: center; gap: 8px; background: #209cee; color: white; padding: 8px 20px; border-radius: 0; font-size: 18px; font-weight: bold; border: 4px solid #000; box-shadow: 3px 3px 0 #000; }
   .radar-container { display: flex; justify-content: center; margin: 30px 0; }
   .dimension-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px; }
-  .dimension-card { background: #f8f9ff; border-radius: 10px; padding: 18px; border-left: 4px solid #667eea; }
-  .dimension-card h3 { font-size: 15px; color: #667eea; margin-bottom: 8px; }
+  .dimension-card { background: #f8f9ff; border-radius: 0; padding: 18px; border: 4px solid #000; box-shadow: 3px 3px 0 #000; }
+  .dimension-card h3 { font-size: 15px; color: #209cee; margin-bottom: 8px; }
   .dimension-card .score { font-size: 24px; font-weight: bold; color: #2c3e50; }
-  .dimension-card .rank-badge { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 12px; margin-left: 8px; }
+  .dimension-card .rank-badge { display: inline-block; padding: 2px 10px; border-radius: 0; font-size: 12px; margin-left: 8px; border: 2px solid #000; }
   .rank-1 { background: #d4edda; color: #155724; }
   .rank-2 { background: #cce5ff; color: #004085; }
   .rank-3 { background: #fff3cd; color: #856404; }
@@ -119,17 +119,17 @@ REPORT_TEMPLATE = """
   .analysis-section { margin-top: 24px; }
   .analysis-section h3 { font-size: 16px; color: #495057; margin-bottom: 12px; }
   .analysis-content { font-size: 14px; line-height: 1.8; color: #555; white-space: pre-wrap; }
-  .suggestions { background: #f0f7ff; border-radius: 10px; padding: 20px; margin-top: 16px; }
+  .suggestions { background: #f0f7ff; border-radius: 0; padding: 20px; margin-top: 16px; border: 4px solid #000; box-shadow: 3px 3px 0 #000; }
   .suggestions h3 { color: #2d6ca2; margin-bottom: 12px; }
   .footer { text-align: center; padding: 30px; color: #999; font-size: 12px; }
   .bar-chart { margin: 20px 0; }
   .bar-item { display: flex; align-items: center; margin-bottom: 10px; }
   .bar-label { width: 80px; font-size: 13px; color: #555; text-align: right; padding-right: 12px; }
-  .bar-track { flex: 1; height: 24px; background: #e9ecef; border-radius: 12px; overflow: hidden; position: relative; }
-  .bar-fill { height: 100%; border-radius: 12px; display: flex; align-items: center; padding-left: 10px; font-size: 12px; color: white; font-weight: bold; transition: width 0.6s ease; }
+  .bar-track { flex: 1; height: 24px; background: #e9ecef; border-radius: 0; overflow: hidden; position: relative; border: 3px solid #000; }
+  .bar-fill { height: 100%; border-radius: 0; display: flex; align-items: center; padding-left: 10px; font-size: 12px; color: white; font-weight: bold; transition: width 0.6s ease; }
   .bar-value { margin-left: 10px; font-size: 13px; color: #666; width: 50px; }
   .md-content { font-size: 14px; line-height: 1.9; color: #444; }
-  .md-content h1, .md-content h2 { font-size: 17px; font-weight: 700; color: #667eea; margin: 20px 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid #e0e4f0; }
+  .md-content h1, .md-content h2 { font-size: 17px; font-weight: 700; color: #209cee; margin: 20px 0 10px 0; padding-bottom: 6px; border-bottom: 4px solid #209cee; }
   .md-content h3, .md-content h4 { font-size: 15px; font-weight: 600; color: #2c3e50; margin: 16px 0 8px 0; }
   .md-content p { margin: 8px 0; }
   .md-content strong { color: #2c3e50; font-weight: 700; }
@@ -144,7 +144,7 @@ REPORT_TEMPLATE = """
   @media print {
     body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .container { max-width: 100%; padding: 0; }
-    .card { box-shadow: none; border: 1px solid #e0e0e0; }
+    .card { box-shadow: none; border: 4px solid #000; }
   }
 </style>
 </head>

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   MuseCrea V3.0 — NES.css-Inspired Pixel Dark Theme
+   MuseCrea V4.0 — NES.css-Inspired Pixel Theme
    ═══════════════════════════════════════════════════════ */
 
 /* ── Pixel Font Face ── */
@@ -26,17 +26,17 @@
   --warning-shadow: #e59400;
   --accent: #f093fb;
 
-  /* Dark theme base */
-  --bg: #0d0d0d;
-  --bg-card: #1a1a2e;
-  --bg-card-hover: #22223a;
-  --bg-surface: #16213e;
-  --bg-input: #111122;
-  --text: #e8e8e8;
-  --text-light: #9898b0;
-  --text-muted: #5a5a78;
-  --border: #3a3a5c;
-  --border-light: #4a4a6a;
+  /* Dark theme base — NES.css pure black style */
+  --bg: #000000;
+  --bg-card: #0a0a0a;
+  --bg-card-hover: #1a1a1a;
+  --bg-surface: #111111;
+  --bg-input: #000000;
+  --text: #ffffff;
+  --text-light: #cccccc;
+  --text-muted: #888888;
+  --border: #ffffff;
+  --border-light: #cccccc;
 
   /* Fonts — Zpix pixel font for both EN and CN */
   --font-pixel: 'Zpix', 'Courier New', monospace;
@@ -44,35 +44,35 @@
   --font-mono: 'Courier New', 'Consolas', monospace;
 
   /* NES.css pixel border SVGs — compact 5x5 (buttons/inputs) */
-  --pixel-border-compact: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="5" height="5"><path fill="%233a3a5c" d="M2 0h1v1H2zM1 1h1v1H1zM3 1h1v1H3zM0 2h1v1H0zM4 2h1v1H4zM1 3h1v1H1zM3 3h1v1H3zM2 4h1v1H2z"/></svg>');
+  --pixel-border-compact: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="5" height="5"><path fill="%23ffffff" d="M2 0h1v1H2zM1 1h1v1H1zM3 1h1v1H3zM0 2h1v1H0zM4 2h1v1H4zM1 3h1v1H1zM3 3h1v1H3zM2 4h1v1H2z"/></svg>');
   --pixel-border-compact-primary: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="5" height="5"><path fill="%23209cee" d="M2 0h1v1H2zM1 1h1v1H1zM3 1h1v1H3zM0 2h1v1H0zM4 2h1v1H4zM1 3h1v1H1zM3 3h1v1H3zM2 4h1v1H2z"/></svg>');
   /* Large 8x8 pixel border (cards/containers) */
-  --pixel-border-large: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><path fill="%233a3a5c" d="M3 0h2v1H3zM2 1h1v1H2zM5 1h1v1H5zM1 2h1v1H1zM6 2h1v1H6zM0 3h1v1H0zM7 3h1v1H7zM0 4h1v1H0zM7 4h1v1H7zM1 5h1v1H1zM6 5h1v1H6zM2 6h1v1H2zM5 6h1v1H5zM3 7h2v1H3z"/></svg>');
-  --pixel-border-large-white: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><path fill="%23e8e8e8" d="M3 0h2v1H3zM2 1h1v1H2zM5 1h1v1H5zM1 2h1v1H1zM6 2h1v1H6zM0 3h1v1H0zM7 3h1v1H7zM0 4h1v1H0zM7 4h1v1H7zM1 5h1v1H1zM6 5h1v1H6zM2 6h1v1H2zM5 6h1v1H5zM3 7h2v1H3z"/></svg>');
+  --pixel-border-large: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><path fill="%23ffffff" d="M3 0h2v1H3zM2 1h1v1H2zM5 1h1v1H5zM1 2h1v1H1zM6 2h1v1H6zM0 3h1v1H0zM7 3h1v1H7zM0 4h1v1H0zM7 4h1v1H7zM1 5h1v1H1zM6 5h1v1H6zM2 6h1v1H2zM5 6h1v1H5zM3 7h2v1H3z"/></svg>');
+  --pixel-border-large-white: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><path fill="%23ffffff" d="M3 0h2v1H3zM2 1h1v1H2zM5 1h1v1H5zM1 2h1v1H1zM6 2h1v1H6zM0 3h1v1H0zM7 3h1v1H7zM0 4h1v1H0zM7 4h1v1H7zM1 5h1v1H1zM6 5h1v1H6zM2 6h1v1H2zM5 6h1v1H5zM3 7h2v1H3z"/></svg>');
 
   /* Sizing */
   --border-size: 4px;
   --btn-shadow: #adafbc;
 }
 
-/* ── Light Theme Overrides ── */
+/* ── Light Theme Overrides — NES.css pure white style ── */
 [data-theme="light"] {
-  --bg: #f0f2f5;
+  --bg: #ffffff;
   --bg-card: #ffffff;
-  --bg-card-hover: #f5f7fa;
-  --bg-surface: #e8edf2;
+  --bg-card-hover: #f5f5f5;
+  --bg-surface: #f0f0f0;
   --bg-input: #ffffff;
-  --text: #2c3e50;
-  --text-light: #6b7b8d;
-  --text-muted: #9ca3af;
-  --border: #c0c8d0;
-  --border-light: #d4dbe3;
-  --btn-shadow: #8a8ca0;
+  --text: #000000;
+  --text-light: #333333;
+  --text-muted: #666666;
+  --border: #000000;
+  --border-light: #333333;
+  --btn-shadow: #000000;
 
-  --pixel-border-compact: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="5" height="5"><path fill="%23c0c8d0" d="M2 0h1v1H2zM1 1h1v1H1zM3 1h1v1H3zM0 2h1v1H0zM4 2h1v1H4zM1 3h1v1H1zM3 3h1v1H3zM2 4h1v1H2z"/></svg>');
+  --pixel-border-compact: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="5" height="5"><path fill="%23000000" d="M2 0h1v1H2zM1 1h1v1H1zM3 1h1v1H3zM0 2h1v1H0zM4 2h1v1H4zM1 3h1v1H1zM3 3h1v1H3zM2 4h1v1H2z"/></svg>');
   --pixel-border-compact-primary: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="5" height="5"><path fill="%23209cee" d="M2 0h1v1H2zM1 1h1v1H1zM3 1h1v1H3zM0 2h1v1H0zM4 2h1v1H4zM1 3h1v1H1zM3 3h1v1H3zM2 4h1v1H2z"/></svg>');
-  --pixel-border-large: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><path fill="%23c0c8d0" d="M3 0h2v1H3zM2 1h1v1H2zM5 1h1v1H5zM1 2h1v1H1zM6 2h1v1H6zM0 3h1v1H0zM7 3h1v1H7zM0 4h1v1H0zM7 4h1v1H7zM1 5h1v1H1zM6 5h1v1H6zM2 6h1v1H2zM5 6h1v1H5zM3 7h2v1H3z"/></svg>');
-  --pixel-border-large-white: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><path fill="%23c0c8d0" d="M3 0h2v1H3zM2 1h1v1H2zM5 1h1v1H5zM1 2h1v1H1zM6 2h1v1H6zM0 3h1v1H0zM7 3h1v1H7zM0 4h1v1H0zM7 4h1v1H7zM1 5h1v1H1zM6 5h1v1H6zM2 6h1v1H2zM5 6h1v1H5zM3 7h2v1H3z"/></svg>');
+  --pixel-border-large: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><path fill="%23000000" d="M3 0h2v1H3zM2 1h1v1H2zM5 1h1v1H5zM1 2h1v1H1zM6 2h1v1H6zM0 3h1v1H0zM7 3h1v1H7zM0 4h1v1H0zM7 4h1v1H7zM1 5h1v1H1zM6 5h1v1H6zM2 6h1v1H2zM5 6h1v1H5zM3 7h2v1H3z"/></svg>');
+  --pixel-border-large-white: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><path fill="%23000000" d="M3 0h2v1H3zM2 1h1v1H2zM5 1h1v1H5zM1 2h1v1H1zM6 2h1v1H6zM0 3h1v1H0zM7 3h1v1H7zM0 4h1v1H0zM7 4h1v1H7zM1 5h1v1H1zM6 5h1v1H6zM2 6h1v1H2zM5 6h1v1H5zM3 7h2v1H3z"/></svg>');
 }
 
 [data-theme="light"] body::after {
@@ -87,7 +87,7 @@
 
 [data-theme="light"] .section-card,
 [data-theme="light"] .auth-card {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: none;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -813,7 +813,7 @@ html, body { overflow-x: hidden; }
   background: var(--bg-input);
   border: 2px solid var(--border);
   overflow: hidden;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+  box-shadow: inset -3px -3px 0 var(--border);
 }
 .dim-bar-fill {
   height: 100%;
@@ -825,7 +825,7 @@ html, body { overflow-x: hidden; }
   color: var(--bg);
   font-weight: bold;
   transition: width 0.6s ease;
-  box-shadow: inset -4px 0 8px rgba(0,0,0,0.2);
+  box-shadow: inset -3px -3px 0 rgba(0,0,0,0.3);
 }
 .dim-bar-score {
   width: 55px;
@@ -932,7 +932,7 @@ html, body { overflow-x: hidden; }
   margin: 0 -18px;
   border: none;
   background: #f5f7fa;
-  border-radius: 4px;
+  border-radius: 0;
 }
 /* ── Results Feedback Widget ── */
 .fb-widget {
@@ -940,7 +940,7 @@ html, body { overflow-x: hidden; }
   min-width: 260px;
   padding: 16px;
   border: 2px solid var(--border);
-  border-radius: 10px;
+  border-radius: 0;
   background: var(--bg-surface);
 }
 .fb-widget-title {
@@ -965,7 +965,7 @@ html, body { overflow-x: hidden; }
   justify-content: center;
   padding: 8px;
   border: 2px solid var(--border);
-  border-radius: 8px;
+  border-radius: 0;
   background: transparent;
   color: var(--text-light);
   cursor: pointer;
@@ -989,7 +989,7 @@ html, body { overflow-x: hidden; }
   width: 100%;
   padding: 8px 10px;
   border: 2px solid var(--border);
-  border-radius: 6px;
+  border-radius: 0;
   background: var(--bg-main);
   color: var(--text-primary);
   font-size: 12px;
@@ -1005,7 +1005,7 @@ html, body { overflow-x: hidden; }
   width: 100%;
   padding: 7px 10px;
   border: 2px solid var(--border);
-  border-radius: 6px;
+  border-radius: 0;
   background: var(--bg-main);
   color: var(--text-primary);
   font-size: 12px;
@@ -1036,7 +1036,7 @@ html, body { overflow-x: hidden; }
 }
 .fb-divider {
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  background: var(--primary);
   margin-bottom: 20px;
   opacity: 0.5;
 }
