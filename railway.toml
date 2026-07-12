@@ -9,4 +9,3 @@ restartPolicyType = "always"
 
 [deploy.envs]
 DATABASE_URL = "sqlite:///./musecrea.db"
-PORT = "8000"
