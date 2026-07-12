@@ -788,6 +788,11 @@ html, body { overflow-x: hidden; }
   flex-shrink: 0;
   align-self: stretch;
 }
+.result-img-col .el-button:hover {
+  background: #409eff !important;
+  border-color: #409eff !important;
+  color: #fff !important;
+}
 .product-img--placeholder {
   display: flex;
   align-items: center;
@@ -1233,16 +1238,15 @@ html, body { overflow-x: hidden; }
 }
 .img-lib-item { border: 2px solid var(--border); overflow: hidden; transition: border-color 0.1s; background: var(--bg-surface); }
 .img-lib-item:hover { border-color: var(--primary); }
-.img-lib-assigned-item { opacity: 0.5; }
-.img-lib-assigned-item .img-lib-thumb img { filter: grayscale(30%); }
-.img-lib-assigned-item:hover { opacity: 0.3; }
+.img-lib-assigned-item .img-lib-thumb img { filter: grayscale(50%); opacity: 0.6; }
+.img-lib-assigned-item:hover .img-lib-thumb img { filter: grayscale(30%); opacity: 0.8; }
 .img-lib-thumb { width: 100%; aspect-ratio: 1; overflow: hidden; background: var(--bg); }
 .img-lib-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .img-lib-info { padding: 8px 10px; }
 .img-lib-name { font-size: 12px; font-weight: 600; color: var(--text); }
 .img-lib-meta { font-size: 10px; color: var(--text-muted); margin-top: 2px; font-family: var(--font-mono); }
 .img-lib-assigned { margin-top: 4px; }
-.img-lib-actions { padding: 6px 10px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; }
+.img-lib-actions { padding: 6px 10px; border-top: 1px solid var(--border); display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
 
 .imglib-tips-toggle { cursor: pointer; font-size: 13px; color: var(--primary); user-select: none; }
 .imglib-tips-toggle:hover { color: var(--primary-hover); }

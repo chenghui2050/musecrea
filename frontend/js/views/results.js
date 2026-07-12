@@ -23,7 +23,7 @@ const ResultsPage = {
           </div>
           <div v-else class="product-img product-img--placeholder" @click="openImageLibrary(r.product_id)"><span class="px-icon px-museum" style="width:72px;height:72px;"></span></div>
           <el-button size="small" @click="openImageLibrary(r.product_id)" style="margin-top:8px">
-            <span class="px-icon px-cam"></span> {{ r.product_image ? t('results.changeImage') : t('results.uploadImage') }}
+            {{ r.product_image ? t('results.changeImage') : t('results.uploadImage') }}
           </el-button>
         </div>
 
@@ -43,45 +43,13 @@ const ResultsPage = {
           <p class="fb-widget-desc">{{ t('results.fbDesc') }}</p>
           <div class="fb-widget-thumbs">
             <button class="fb-widget-thumb" :class="{ 'fb-up-active': fbSentiment === 'up' }" @click="fbSentiment = fbSentiment === 'up' ? '' : 'up'">
-              <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor">
-                <rect x="7" y="0" width="3" height="2"/>
-                <rect x="7" y="2" width="4" height="1"/>
-                <rect x="7" y="3" width="5" height="1"/>
-                <rect x="8" y="4" width="6" height="1"/>
-                <rect x="8" y="5" width="7" height="1"/>
-                <rect x="0" y="6" width="5" height="4"/>
-                <rect x="6" y="6" width="9" height="1"/>
-                <rect x="7" y="7" width="8" height="1"/>
-                <rect x="7" y="8" width="8" height="1"/>
-                <rect x="0" y="10" width="5" height="4"/>
-                <rect x="6" y="10" width="7" height="1"/>
-                <rect x="6" y="11" width="6" height="1"/>
-                <rect x="6" y="12" width="5" height="1"/>
-                <rect x="6" y="13" width="4" height="2"/>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
               </svg>
             </button>
             <button class="fb-widget-thumb" :class="{ 'fb-down-active': fbSentiment === 'down' }" @click="fbSentiment = fbSentiment === 'down' ? '' : 'down'">
-              <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor">
-                <rect x="1" y="0" width="3" height="1"/>
-                <rect x="1" y="1" width="4" height="1"/>
-                <rect x="2" y="2" width="4" height="1"/>
-                <rect x="2" y="3" width="3" height="1"/>
-                <rect x="2" y="4" width="3" height="1"/>
-                <rect x="0" y="5" width="4" height="4"/>
-                <rect x="4" y="5" width="8" height="1"/>
-                <rect x="4" y="6" width="7" height="1"/>
-                <rect x="4" y="7" width="6" height="1"/>
-                <rect x="4" y="8" width="5" height="1"/>
-                <rect x="6" y="9" width="4" height="1"/>
-                <rect x="0" y="10" width="4" height="1"/>
-                <rect x="6" y="10" width="3" height="1"/>
-                <rect x="0" y="11" width="4" height="1"/>
-                <rect x="6" y="11" width="2" height="1"/>
-                <rect x="0" y="12" width="4" height="1"/>
-                <rect x="5" y="12" width="2" height="1"/>
-                <rect x="0" y="13" width="4" height="1"/>
-                <rect x="5" y="13" width="2" height="2"/>
-                <rect x="0" y="14" width="4" height="2"/>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"/>
               </svg>
             </button>
           </div>
