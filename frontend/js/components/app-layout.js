@@ -138,7 +138,7 @@ const AppLayout = {
     };
 
     // Theme toggle
-    const isDark = Vue.ref(localStorage.getItem('musecrea_theme') !== 'light');
+    const isDark = Vue.ref(localStorage.getItem('musecrea_theme_v2') !== 'light');
 
     const applyTheme = (dark) => {
       const html = document.documentElement;
@@ -156,7 +156,7 @@ const AppLayout = {
 
     const toggleTheme = () => {
       isDark.value = !isDark.value;
-      localStorage.setItem('musecrea_theme', isDark.value ? 'dark' : 'light');
+      localStorage.setItem('musecrea_theme_v2', isDark.value ? 'dark' : 'light');
       applyTheme(isDark.value);
     };
 
