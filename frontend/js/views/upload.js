@@ -182,8 +182,10 @@ const UploadPage = {
     </div>
 
     <div v-if="step === 4 && !running && results.length > 0" class="section-card text-center">
-      <div style="font-size:48px;margin-bottom:16px"><span class="px-icon px-icon-xl px-party"></span></div>
-      <h2>{{ t('upload.done') }}</h2>
+      <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px">
+        <span class="px-icon px-icon-xl px-party" style="margin-right:0"></span>
+        <h2 style="margin:0">{{ t('upload.done') }}</h2>
+      </div>
       <p class="text-light" style="margin:12px 0 24px">{{ t('upload.doneSummary', results.length, totalCost) }}</p>
       <div style="display:flex;gap:12px;justify-content:center;">
         <el-button type="primary" size="large" @click="viewResults"><span class="px-icon px-bar"></span> {{ t('upload.viewResults') }}</el-button>

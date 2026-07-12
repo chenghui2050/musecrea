@@ -9,22 +9,10 @@ const AppLayout = {
         MuseCrea<span>{{ t('app.subtitle') }}</span>
       </div>
       <div class="header-right">
-        <span class="credits-badge"><span class="px-icon px-coin"></span> {{ userCredits }} {{ t('nav.credits') }}</span>
+        <span class="credits-badge">{{ userCredits }} {{ t('nav.credits') }}</span>
         <button @click="toggleTheme" class="theme-toggle-btn" :title="isDark ? t('nav.lightMode') : t('nav.darkMode')">
-          <svg v-if="isDark" width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" fill="currentColor">
-            <rect x="8" y="2" width="2" height="1"/><rect x="7" y="3" width="1" height="1"/><rect x="6" y="4" width="1" height="1"/>
-            <rect x="5" y="5" width="1" height="1"/><rect x="4" y="6" width="1" height="4"/><rect x="5" y="10" width="1" height="1"/>
-            <rect x="6" y="11" width="1" height="1"/><rect x="7" y="12" width="1" height="1"/><rect x="8" y="13" width="2" height="1"/>
-            <rect x="5" y="6" width="1" height="1"/><rect x="5" y="9" width="1" height="1"/><rect x="6" y="7" width="1" height="2"/>
-          </svg>
-          <svg v-else width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges" fill="currentColor">
-            <rect x="7" y="0" width="2" height="2"/><rect x="7" y="14" width="2" height="2"/>
-            <rect x="0" y="7" width="2" height="2"/><rect x="14" y="7" width="2" height="2"/>
-            <rect x="3" y="3" width="1" height="1"/><rect x="12" y="3" width="1" height="1"/>
-            <rect x="3" y="12" width="1" height="1"/><rect x="12" y="12" width="1" height="1"/>
-            <rect x="6" y="5" width="4" height="1"/><rect x="5" y="6" width="6" height="4"/>
-            <rect x="6" y="10" width="4" height="1"/>
-          </svg>
+          <img v-if="isDark" src="/img/icon-moon.png" alt="moon" style="width:16px;height:16px;" />
+          <img v-else src="/img/icon-sun.png" alt="sun" style="width:16px;height:16px;" />
         </button>
         <button @click="toggleLang" class="lang-toggle-btn">{{ currentLang === 'zh' ? 'EN' : '中' }}</button>
         <el-dropdown @command="handleCommand">
@@ -74,15 +62,15 @@ const AppLayout = {
     <footer class="app-footer">
       <div class="footer-row">
         <span class="footer-item">
-          <svg class="footer-icon" width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges"><rect x="6" y="1" width="4" height="2" fill="#209cee"/><rect x="4" y="3" width="8" height="2" fill="#209cee"/><rect x="5" y="5" width="6" height="2" fill="#209cee"/><rect x="6" y="7" width="4" height="2" fill="#209cee"/><rect x="3" y="9" width="10" height="2" fill="#209cee"/><rect x="2" y="11" width="12" height="2" fill="#209cee"/><rect x="4" y="13" width="8" height="2" fill="#209cee"/></svg>
+          <img class="footer-icon" src="/img/icon-author.png" alt="author" style="width:16px;height:16px;" />
           <span>程辉 · 浙江财经大学东方学院</span>
         </span>
         <span class="footer-item">
-          <svg class="footer-icon" width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges"><rect x="2" y="3" width="12" height="2" fill="#209cee"/><rect x="2" y="5" width="2" height="6" fill="#209cee"/><rect x="12" y="5" width="2" height="6" fill="#209cee"/><rect x="2" y="11" width="12" height="2" fill="#209cee"/><rect x="4" y="5" width="8" height="2" fill="#f7d51d"/><rect x="4" y="7" width="2" height="2" fill="#f7d51d"/><rect x="10" y="7" width="2" height="2" fill="#f7d51d"/></svg>
+          <img class="footer-icon" src="/img/icon-email.png" alt="email" style="width:16px;height:16px;" />
           <a href="mailto:chenghui2050@163.com" class="footer-email">chenghui2050@163.com</a>
         </span>
         <span class="footer-item">
-          <svg class="footer-icon" width="16" height="16" viewBox="0 0 16 16" shape-rendering="crispEdges"><rect x="3" y="1" width="10" height="2" fill="#05ffa1"/><rect x="1" y="3" width="14" height="2" fill="#05ffa1"/><rect x="1" y="5" width="14" height="2" fill="#05ffa1"/><rect x="1" y="7" width="14" height="2" fill="#05ffa1"/><rect x="3" y="9" width="10" height="2" fill="#05ffa1"/><rect x="5" y="11" width="6" height="2" fill="#05ffa1"/><rect x="6" y="13" width="4" height="2" fill="#05ffa1"/></svg>
+          <img class="footer-icon" src="/img/icon-wechat.png" alt="wechat" style="width:16px;height:16px;" />
           <span>{{ t('footer.wechat') }}</span>
         </span>
       </div>
@@ -137,8 +125,8 @@ const AppLayout = {
       MuseCreaI18n.setLocale(currentLang.value === 'zh' ? 'en' : 'zh');
     };
 
-    // Theme toggle
-    const isDark = Vue.ref(localStorage.getItem('musecrea_theme_v2') !== 'light');
+    // Theme toggle - default to dark mode
+    const isDark = Vue.ref(true);
 
     const applyTheme = (dark) => {
       const html = document.documentElement;

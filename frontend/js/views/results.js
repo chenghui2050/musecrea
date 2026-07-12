@@ -43,7 +43,7 @@ const ResultsPage = {
           <p class="fb-widget-desc">{{ t('results.fbDesc') }}</p>
           <div class="fb-widget-thumbs">
             <button class="fb-widget-thumb" :class="{ 'fb-up-active': fbSentiment === 'up' }" @click="fbSentiment = fbSentiment === 'up' ? '' : 'up'">
-              <svg width="22" height="22" viewBox="0 0 16 16" shape-rendering="crispEdges" fill="currentColor">
+              <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor">
                 <rect x="7" y="0" width="3" height="2"/>
                 <rect x="7" y="2" width="4" height="1"/>
                 <rect x="7" y="3" width="5" height="1"/>
@@ -61,7 +61,7 @@ const ResultsPage = {
               </svg>
             </button>
             <button class="fb-widget-thumb" :class="{ 'fb-down-active': fbSentiment === 'down' }" @click="fbSentiment = fbSentiment === 'down' ? '' : 'down'">
-              <svg width="22" height="22" viewBox="0 0 16 16" shape-rendering="crispEdges" fill="currentColor">
+              <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor">
                 <rect x="1" y="0" width="3" height="1"/>
                 <rect x="1" y="1" width="4" height="1"/>
                 <rect x="2" y="2" width="4" height="1"/>
