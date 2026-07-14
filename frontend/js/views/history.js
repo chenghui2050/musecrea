@@ -5,10 +5,10 @@ const HistoryPage = {
     <div class="section-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <div>
-          <h2><span class="px-icon px-clip"></span> {{ t('hist.title') }}</h2>
+          <h2><span style="display:inline-flex;align-items:center;vertical-align:middle;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></span> {{ t('hist.title') }}</h2>
           <p class="text-light" style="margin-top:4px">{{ t('hist.desc') }}</p>
         </div>
-        <el-button type="primary" plain @click="openImageLibrary(null)"><span style="display:inline-flex;align-items:center;gap:6px"><svg width="24" height="24" viewBox="0 0 36 36" shape-rendering="crispEdges"><rect x="12" y="3" width="12" height="3" fill="#f7d51d"/><rect x="6" y="6" width="24" height="3" fill="#f7d51d"/><rect x="6" y="9" width="9" height="3" fill="#f7d51d"/><rect x="21" y="9" width="9" height="3" fill="#f7d51d"/><rect x="6" y="12" width="9" height="3" fill="#f7d51d"/><rect x="21" y="12" width="9" height="3" fill="#f7d51d"/><rect x="6" y="15" width="9" height="3" fill="#f7d51d"/><rect x="21" y="15" width="9" height="3" fill="#f7d51d"/><rect x="6" y="18" width="24" height="3" fill="#f7d51d"/></svg><span>{{ t('hist.manageImages') }}</span></span></el-button>
+        <el-button type="primary" plain @click="openImageLibrary(null)"><span style="display:inline-flex;align-items:center;gap:6px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>{{ t('hist.manageImages') }}</span></span></el-button>
       </div>
 
       <div v-if="loading" style="text-align:center;padding:40px">
@@ -16,7 +16,7 @@ const HistoryPage = {
       </div>
 
       <div v-if="!loading && records.length === 0" class="text-center" style="padding:40px">
-        <div style="font-size:48px;margin-bottom:16px"><span class="px-icon px-icon-xl px-empty"></span></div>
+        <div style="font-size:48px;margin-bottom:16px"><span style="display:inline-flex;align-items:center;vertical-align:middle;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span></div>
         <p class="text-light">{{ t('hist.noRecords') }}</p>
         <el-button type="primary" style="margin-top:16px" @click="$router.push('/upload')">{{ t('hist.firstEval') }}</el-button>
       </div>
@@ -29,7 +29,7 @@ const HistoryPage = {
               <div v-if="row.product_image" class="hist-thumb" @click.stop="openImageLibrary(row.product_id)">
                 <img :src="row.product_image" style="width:100%;height:100%;object-fit:cover;" />
               </div>
-              <div v-else class="hist-thumb hist-thumb--placeholder" @click.stop="openImageLibrary(row.product_id)" :title="t('hist.clickUpload')"><span class="px-icon px-museum"></span></div>
+              <div v-else class="hist-thumb hist-thumb--placeholder" @click.stop="openImageLibrary(row.product_id)" :title="t('hist.clickUpload')"><span style="display:inline-flex;align-items:center;vertical-align:middle;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg></span></div>
             </template>
           </el-table-column>
           <el-table-column prop="product_id" :label="t('hist.productId')" width="130" />
@@ -61,7 +61,7 @@ const HistoryPage = {
               <div style="display:flex;align-items:center;gap:4px;">
                 <el-button type="primary" link size="small" @click.stop="viewDetail(row)">{{ t('hist.detail') }}</el-button>
                 <el-button type="primary" link size="small" @click.stop="viewReport(row)">{{ t('hist.report') }}</el-button>
-                <el-button type="primary" link size="small" @click.stop="openImageLibrary(row.product_id)"><span style="display:inline-flex;align-items:center;gap:6px;line-height:1"><svg width="24" height="24" viewBox="0 0 36 36" shape-rendering="crispEdges" style="display:block;flex-shrink:0"><rect x="12" y="3" width="12" height="3" fill="#f7d51d"/><rect x="6" y="6" width="24" height="3" fill="#f7d51d"/><rect x="6" y="9" width="9" height="3" fill="#f7d51d"/><rect x="21" y="9" width="9" height="3" fill="#f7d51d"/><rect x="6" y="12" width="9" height="3" fill="#f7d51d"/><rect x="21" y="12" width="9" height="3" fill="#f7d51d"/><rect x="6" y="15" width="9" height="3" fill="#f7d51d"/><rect x="21" y="15" width="9" height="3" fill="#f7d51d"/><rect x="6" y="18" width="24" height="3" fill="#f7d51d"/></svg><span style="line-height:1">{{ t('hist.images') }}</span></span></el-button>
+                <el-button type="primary" link size="small" @click.stop="openImageLibrary(row.product_id)"><span style="display:inline-flex;align-items:center;gap:6px;line-height:1"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span style="line-height:1">{{ t('hist.images') }}</span></span></el-button>
               </div>
             </template>
           </el-table-column>

@@ -1,5 +1,11 @@
 from pydantic_settings import BaseSettings
+from pydantic import model_validator
 from typing import Optional
+from pathlib import Path
+
+
+# Resolve paths relative to this config file's parent (backend/ directory)
+_BACKEND_DIR = Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
@@ -8,7 +14,7 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
 
-    # Database
+    # Database — relative path; resolved to absolute at runtime
     DATABASE_URL: str = "sqlite:///./musecrea.db"
 
     # JWT
@@ -41,13 +47,25 @@ class Settings(BaseSettings):
     SMTP_FROM_NAME: str = "MuseCrea"
     RESET_TOKEN_EXPIRE_HOURS: int = 1
 
-    # File upload
+    # File upload — relative path; resolved to absolute at runtime
     MAX_UPLOAD_SIZE_MB: int = 20
     UPLOAD_DIR: str = "uploads"
 
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+
+    @model_validator(mode="after")
+    def _resolve_relative_paths(self):
+        """Resolve relative SQLite and upload paths to absolute, based on backend dir.
+        This ensures the app works regardless of the process working directory."""
+        if self.DATABASE_URL.startswith("sqlite:///./"):
+            db_name = self.DATABASE_URL.replace("sqlite:///./", "")
+            self.DATABASE_URL = f"sqlite:///{_BACKEND_DIR / db_name}"
+        upload_path = Path(self.UPLOAD_DIR)
+        if not upload_path.is_absolute():
+            self.UPLOAD_DIR = str(_BACKEND_DIR / upload_path)
+        return self
 
 
 settings = Settings()

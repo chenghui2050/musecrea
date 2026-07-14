@@ -6,11 +6,11 @@ const ImageLibraryModal = {
       <!-- Upload Area -->
       <div class="img-lib-upload" @click="triggerUpload" @dragover.prevent @drop.prevent="handleDrop">
         <div v-if="uploading" style="text-align:center">
-          <el-progress type="circle" :percentage="uploadProgress" :width="60" />
+          <el-progress type="circle" :percentage="uploadProgress" :width="60" color="#ff6b00" />
           <p class="text-muted" style="margin-top:8px;font-size:13px">{{ t('imglib.uploading') }}</p>
         </div>
         <div v-else style="text-align:center;padding:20px">
-          <div style="font-size:36px;margin-bottom:8px"><span class="px-icon px-icon-xl px-upload"></span></div>
+          <div style="font-size:36px;margin-bottom:8px"><span style="display:inline-flex;align-items:center;vertical-align:middle;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span></div>
           <p class="text-light" style="font-size:14px">{{ t('imglib.dropzone') }}</p>
           <p class="text-muted" style="font-size:12px;margin-top:4px">{{ t('imglib.formats') }}</p>
           <div style="margin-top:12px;display:flex;justify-content:center;gap:8px;align-items:center;" @click.stop>
@@ -31,11 +31,11 @@ const ImageLibraryModal = {
           <p><strong>{{ t('imglib.tipDirectTitle') }}</strong> — {{ t('imglib.tipDirectDesc') }}</p>
           <p><strong>{{ t('imglib.tipFolderTitle') }}</strong> — {{ t('imglib.tipFolderDesc') }}</p>
           <div v-if="folderPath" class="imglib-folder-path">
-            <span class="px-icon px-folder"></span> {{ folderPath }}
+            <span style="display:inline-flex;align-items:center;vertical-align:middle;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span> {{ folderPath }}
           </div>
           <p style="margin-top:6px">{{ t('imglib.tipNaming') }}</p>
           <p>{{ t('imglib.tipFormats') }}</p>
-          <p v-if="!folderExists" style="color:#f7d51d;margin-top:6px">{{ t('imglib.tipNoFolder') }}</p>
+          <p v-if="!folderExists" style="color:#ff6b00;margin-top:6px">{{ t('imglib.tipNoFolder') }}</p>
           <p v-else style="color:#92cc41;margin-top:6px">{{ t('imglib.tipFolderReady') }} {{ images.length }} {{ t('imglib.tipImageCount') }}</p>
         </div>
       </div>
@@ -45,7 +45,7 @@ const ImageLibraryModal = {
         <el-skeleton :rows="3" animated />
       </div>
       <div v-else-if="images.length === 0" class="text-muted" style="text-align:center;padding:40px">
-        <div style="font-size:48px;margin-bottom:12px"><span class="px-icon px-icon-xl px-museum"></span></div>
+        <div style="font-size:48px;margin-bottom:12px"><span style="display:inline-flex;align-items:center;vertical-align:middle;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg></span></div>
         <p>{{ t('imglib.empty') }}</p>
       </div>
       <div v-else class="img-lib-grid">

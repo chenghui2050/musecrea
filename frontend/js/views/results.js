@@ -3,10 +3,10 @@ const ResultsPage = {
   template: `
   <div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
-      <h2 style="font-size:22px"><span class="px-icon px-bar"></span> {{ t('results.title') }}</h2>
+      <h2 style="font-size:22px"><span style="display:inline-flex;align-items:center;vertical-align:middle;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span> {{ t('results.title') }}</h2>
       <div style="display:flex;gap:10px;">
-        <el-button @click="$router.push('/upload')"><span class="px-icon px-upload"></span> {{ t('results.newEval') }}</el-button>
-        <el-button type="primary" v-if="results.length > 0" @click="downloadReport"><span class="px-icon px-down"></span> {{ t('results.downloadReport') }}</el-button>
+        <el-button @click="$router.push('/upload')"><span style="display:inline-flex;align-items:center;vertical-align:middle;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span> {{ t('results.newEval') }}</el-button>
+        <el-button type="primary" v-if="results.length > 0" @click="downloadReport"><span style="display:inline-flex;align-items:center;vertical-align:middle;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg></span> {{ t('results.downloadReport') }}</el-button>
       </div>
     </div>
 
@@ -21,7 +21,7 @@ const ResultsPage = {
           <div v-if="r.product_image" class="product-img" style="overflow:hidden;">
             <img :src="r.product_image" style="width:100%;height:100%;object-fit:cover;" />
           </div>
-          <div v-else class="product-img product-img--placeholder" @click="openImageLibrary(r.product_id)"><span class="px-icon px-museum" style="width:72px;height:72px;"></span></div>
+          <div v-else class="product-img product-img--placeholder" @click="openImageLibrary(r.product_id)"><span style="display:inline-flex;align-items:center;vertical-align:middle;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg></span></div>
           <el-button size="small" @click="openImageLibrary(r.product_id)" style="margin-top:8px">
             {{ r.product_image ? t('results.changeImage') : t('results.uploadImage') }}
           </el-button>
@@ -86,18 +86,18 @@ const ResultsPage = {
 
       <!-- LLM Analysis -->
       <div v-if="r.llm_analysis" class="analysis-block">
-        <h3><span class="px-icon px-icon-xxl px-bot"></span> {{ t('results.aiAnalysis') }}</h3>
+        <h3><span style="display:inline-flex;align-items:center;vertical-align:middle;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg></span> {{ t('results.aiAnalysis') }}</h3>
         <div class="md-content" v-html="renderMarkdown(r.llm_analysis)"></div>
       </div>
 
       <div v-if="r.improvement_suggestions" class="suggestions-block">
-        <h3><span class="px-icon px-icon-xxl px-bulb"></span> {{ t('results.suggestions') }}</h3>
+        <h3><span style="display:inline-flex;align-items:center;vertical-align:middle;"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5"/></svg></span> {{ t('results.suggestions') }}</h3>
         <div class="md-content" v-html="renderMarkdown(r.improvement_suggestions)"></div>
       </div>
     </div>
 
     <div v-if="!loading && results.length === 0" class="section-card text-center">
-      <div style="font-size:48px;margin-bottom:16px"><span class="px-icon px-icon-xl px-empty"></span></div>
+      <div style="font-size:48px;margin-bottom:16px"><span style="display:inline-flex;align-items:center;vertical-align:middle;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span></div>
       <p class="text-light">{{ t('results.noResults') }}</p>
       <el-button type="primary" style="margin-top:16px" @click="$router.push('/upload')">{{ t('results.startEval') }}</el-button>
     </div>
@@ -118,11 +118,11 @@ const ResultsPage = {
     const maxScore = Vue.ref(1);
 
     const dimConfig = [
-      { key: 'Novelty', label: t('dim.novelty'), color: '#209cee' },
-      { key: 'Usefulness', label: t('dim.usefulness'), color: '#92cc41' },
-      { key: 'Affect', label: t('dim.affect'), color: '#e76e55' },
-      { key: 'Aesthetics', label: t('dim.aesthetics'), color: '#f093fb' },
-      { key: 'Cultural Values', label: t('dim.cultural'), color: '#f7d51d' },
+      { key: 'Novelty', label: t('dim.novelty'), color: '#ff6b00' },
+      { key: 'Usefulness', label: t('dim.usefulness'), color: '#22c55e' },
+      { key: 'Affect', label: t('dim.affect'), color: '#f093fb' },
+      { key: 'Aesthetics', label: t('dim.aesthetics'), color: '#8b5cf6' },
+      { key: 'Cultural Values', label: t('dim.cultural'), color: '#f59e0b' },
     ];
 
     const getRankedDimensions = (r) => {

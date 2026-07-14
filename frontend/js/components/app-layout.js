@@ -1,12 +1,19 @@
 // App Layout Component
 const AppLayout = {
   template: `
-  <div class="app-layout">
+  <div :class="['app-layout', { 'sidebar-collapsed': sidebarCollapsed }]">
     <!-- Header -->
     <header class="app-header">
-      <div class="logo" @click="$router.push('/dashboard')" style="cursor:pointer">
-        <img class="logo-icon" src="/img/icon-logo.png" alt="MuseCrea" />
-        MuseCrea<span>{{ t('app.subtitle') }}</span>
+      <div class="header-left">
+        <button class="sidebar-toggle-btn" @click="toggleSidebar" :title="sidebarCollapsed ? t('nav.expandSidebar') : t('nav.collapseSidebar')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <div class="logo" @click="$router.push('/dashboard')" style="cursor:pointer">
+          <img class="logo-icon" src="/img/icon-logo.png" alt="MuseCrea" />
+          MuseCrea<span>{{ t('app.subtitle') }}</span>
+        </div>
       </div>
       <div class="header-right">
         <span class="credits-badge">{{ userCredits }} {{ t('nav.credits') }}</span>
@@ -28,9 +35,9 @@ const AppLayout = {
           </span>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item command="profile"><span class="px-icon px-person"></span> {{ t('nav.profileInfo') }}</el-dropdown-item>
-              <el-dropdown-item command="admin" v-if="isAdmin"><span class="px-icon px-gear"></span> {{ t('nav.admin') }}</el-dropdown-item>
-              <el-dropdown-item command="logout" divided><span class="px-icon px-door"></span> {{ t('nav.logout') }}</el-dropdown-item>
+              <el-dropdown-item command="profile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> {{ t('nav.profileInfo') }}</el-dropdown-item>
+              <el-dropdown-item command="admin" v-if="isAdmin"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> {{ t('nav.admin') }}</el-dropdown-item>
+              <el-dropdown-item command="logout" divided><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> {{ t('nav.logout') }}</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -42,19 +49,19 @@ const AppLayout = {
       <aside class="app-sidebar">
         <ul class="sidebar-menu">
           <li :class="{ active: $route.path === '/dashboard' }" @click="$router.push('/dashboard')">
-            <span class="icon pix-dashboard"></span> {{ t('nav.dashboard') }}
+            <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> {{ t('nav.dashboard') }}
           </li>
           <li :class="{ active: $route.path === '/upload' }" @click="$router.push('/upload')">
-            <span class="icon pix-upload"></span> {{ t('nav.upload') }}
+            <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> {{ t('nav.upload') }}
           </li>
           <li :class="{ active: $route.path === '/history' }" @click="$router.push('/history')">
-            <span class="icon pix-history"></span> {{ t('nav.history') }}
+            <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> {{ t('nav.history') }}
           </li>
           <li :class="{ active: $route.path === '/profile' }" @click="$router.push('/profile')">
-            <span class="icon pix-profile"></span> {{ t('nav.profile') }}
+            <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> {{ t('nav.profile') }}
           </li>
           <li v-if="isAdmin" :class="{ active: $route.path === '/admin' }" @click="$router.push('/admin')">
-            <span class="icon pix-admin"></span> {{ t('nav.admin') }}
+            <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> {{ t('nav.admin') }}
           </li>
         </ul>
       </aside>
@@ -69,19 +76,22 @@ const AppLayout = {
     <footer class="app-footer">
       <div class="footer-row">
         <span class="footer-item">
-          <img class="footer-icon" src="/img/icon-author.png" alt="author" style="width:16px;height:16px;" />
-          <span>程辉 · 浙江财经大学东方学院</span>
+          <svg class="footer-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <a :href="profileUrl" target="_blank" class="footer-author">{{ t('footer.author') }}</a>
         </span>
         <span class="footer-item">
-          <img class="footer-icon" src="/img/icon-email.png" alt="email" style="width:16px;height:16px;" />
+          <svg class="footer-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
           <a href="mailto:chenghui2050@163.com" class="footer-email">chenghui2050@163.com</a>
         </span>
-        <span class="footer-item">
-          <img class="footer-icon" src="/img/icon-wechat.png" alt="wechat" style="width:16px;height:16px;" />
+        <span class="footer-item footer-wechat-wrap">
+          <svg class="footer-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
           <span>{{ t('footer.wechat') }}</span>
+          <div class="footer-qr-bubble">
+            <img class="footer-qr-popup" src="/img/wechat-qr.png" alt="WeChat QR Code" />
+          </div>
         </span>
       </div>
-      <div class="footer-version">MuseCrea V4.0 · 2026-07-11</div>
+      <div class="footer-version">MuseCrea V5.1 · 2026-07-13</div>
     </footer>
   </div>
   `,
@@ -131,10 +141,14 @@ const AppLayout = {
     const toggleLang = () => {
       MuseCreaI18n.setLocale(currentLang.value === 'zh' ? 'en' : 'zh');
     };
+    const profileUrl = Vue.computed(() =>
+      currentLang.value === 'zh'
+        ? 'https://person.zufe.edu.cn/chenghui2050/zh_CN/index.htm'
+        : 'https://person.zufe.edu.cn/chenghui/en/index.htm'
+    );
 
-    // Theme toggle - read saved preference, default to dark mode
-    const savedTheme = localStorage.getItem('musecrea_theme_v2');
-    const isDark = Vue.ref(savedTheme !== 'light');
+    // Theme toggle - dark mode is always the default (ignore saved preference)
+    const isDark = Vue.ref(true);
 
     const applyTheme = (dark) => {
       const html = document.documentElement;
@@ -153,12 +167,22 @@ const AppLayout = {
     // Apply theme immediately (before first render) to sync with inline script
     applyTheme(isDark.value);
 
+    // Sidebar collapse toggle — always start collapsed
+    const sidebarCollapsed = Vue.ref(true);
+
+    const toggleSidebar = () => {
+      sidebarCollapsed.value = !sidebarCollapsed.value;
+      localStorage.setItem('musecrea_sidebar', sidebarCollapsed.value ? 'collapsed' : 'expanded');
+    };
+
     const toggleTheme = () => {
       isDark.value = !isDark.value;
       localStorage.setItem('musecrea_theme_v2', isDark.value ? 'dark' : 'light');
+      window.__userThemeChange = true;
       applyTheme(isDark.value);
+      setTimeout(function() { window.__userThemeChange = false; }, 500);
     };
 
-    return { isAdmin, userName, userCredits, handleCommand, fetchUser, t, currentLang, toggleLang, isDark, toggleTheme };
+    return { isAdmin, userName, userCredits, handleCommand, fetchUser, t, currentLang, toggleLang, isDark, toggleTheme, sidebarCollapsed, toggleSidebar, profileUrl };
   }
 };

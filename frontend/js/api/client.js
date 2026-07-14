@@ -172,9 +172,9 @@ function getDimLabel(dim) {
 }
 
 const DIM_COLORS = {
-  'Novelty': '#209cee',
-  'Usefulness': '#92cc41',
-  'Affect': '#e76e55',
-  'Aesthetics': '#f093fb',
-  'Cultural Values': '#f7d51d',
+  'Novelty': '#ff6b00',
+  'Usefulness': '#22c55e',
+  'Affect': '#f093fb',
+  'Aesthetics': '#8b5cf6',
+  'Cultural Values': '#f59e0b',
 };
