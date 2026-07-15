@@ -14,7 +14,7 @@ const DashboardPage = {
             <el-button type="primary" size="large" @click="$router.push('/upload')">
               {{ t('dash.uploadStart') }} →
             </el-button>
-            <el-button size="large" @click="$router.push('/history')">
+            <el-button class="btn-ghost" size="large" @click="$router.push('/history')">
               {{ t('dash.viewHistory') }}
             </el-button>
           </div>
@@ -213,28 +213,28 @@ const DashboardPage = {
 
     <div class="dashboard-two-col">
       <div class="section-card">
-        <h2>
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <h2 style="color:var(--primary)">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           {{ t('dash.quickStart') }}
         </h2>
-        <p class="text-light" style="margin-bottom:20px;font-size:14px">{{ t('dash.quickStartDesc') }}</p>
-        <el-button type="primary" size="large" @click="$router.push('/upload')" style="width:100%">
+        <p class="text-light" style="margin-bottom:28px;font-size:14px">{{ t('dash.quickStartDesc') }}</p>
+        <el-button type="primary" size="large" @click="$router.push('/upload')" style="width:100%;border-radius:28px;font-size:16px;height:48px">
           {{ t('dash.uploadStart') }}
         </el-button>
-        <div style="margin-top:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <span style="font-size:12px;color:var(--primary);font-weight:600;">{{ t('upload.templates') }}</span>
-          <a href="/templates/Dataset Template.xlsx" download class="template-download-link" style="font-size:11px;padding:3px 10px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <div style="margin-top:32px;text-align:center;">
+          <span style="font-size:13px;color:var(--primary);font-weight:600;margin-right:8px;">{{ t('upload.templates') }}</span>
+          <a href="/templates/Dataset Template.xlsx" download class="template-download-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             {{ t('upload.templateFormat') }}
           </a>
-          <a href="/templates/Demo Dataset.xlsx" download class="template-download-link" style="font-size:11px;padding:3px 10px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <a href="/templates/Demo Dataset.xlsx" download class="template-download-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             {{ t('upload.templateDemo') }}
           </a>
         </div>
-        <div style="margin-top:16px;display:flex;gap:10px;">
-          <el-button @click="$router.push('/history')" style="flex:1">{{ t('dash.viewHistory') }}</el-button>
-          <el-button @click="showCouponDialog = true" style="flex:1">{{ t('dash.redeemCoupon') }}</el-button>
+        <div style="margin-top:32px;display:flex;gap:12px;">
+          <el-button class="btn-ghost" @click="$router.push('/history')" style="flex:1">{{ t('dash.viewHistory') }}</el-button>
+          <el-button class="btn-ghost" @click="showCouponDialog = true" style="flex:1">{{ t('dash.redeemCoupon') }}</el-button>
         </div>
       </div>
 
@@ -272,13 +272,15 @@ const DashboardPage = {
     </div>
 
     <!-- 券码兑换弹窗 -->
-    <el-dialog v-model="showCouponDialog" :title="t('dash.redeemTitle')" width="400px">
-      <el-input v-model="couponCode" :placeholder="t('dash.enterCoupon')" size="large" />
-      <template #footer>
-        <el-button @click="showCouponDialog = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" :loading="couponLoading" @click="redeemCoupon">{{ t('dash.redeem') }}</el-button>
-      </template>
-    </el-dialog>
+    <Teleport to="body">
+      <el-dialog v-model="showCouponDialog" :title="t('dash.redeemTitle')" width="400px" destroy-on-close>
+        <el-input v-model="couponCode" :placeholder="t('dash.enterCoupon')" size="large" />
+        <template #footer>
+          <el-button @click="showCouponDialog = false">{{ t('common.cancel') }}</el-button>
+          <el-button type="primary" :loading="couponLoading" @click="redeemCoupon">{{ t('dash.redeem') }}</el-button>
+        </template>
+      </el-dialog>
+    </Teleport>
   </div>
   `,
   setup() {

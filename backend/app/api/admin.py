@@ -7,6 +7,7 @@ from app.models import User, Evaluation, Order, Coupon
 from app.schemas import SystemStats, CouponCreate, CouponResponse
 from app.core.security import get_current_admin, get_password_hash
 from app.core.i18n import msg, get_request_lang
+from app.services.billing import add_credits
 
 router = APIRouter(prefix="/admin", tags=["管理后台"])
 
@@ -129,6 +130,25 @@ def update_user_credits(
     user.credits = credits
     db.commit()
     return {'user_id': user_id, 'credits': credits}
+
+
+@router.post("/users/{user_id}/grant-credits")
+def grant_credits(
+    request: Request,
+    user_id: int,
+    count: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+):
+    """管理员直接给用户发放额度"""
+    lang = get_request_lang(request)
+    if count <= 0:
+        raise HTTPException(status_code=400, detail=msg("admin.invalid_credits", lang))
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail=msg("admin.user_not_found", lang))
+    add_credits(user, db, count)
+    return {'user_id': user_id, 'granted': count, 'credits': user.credits}
 
 
 @router.get("/api-logs")

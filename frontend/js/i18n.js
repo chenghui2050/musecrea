@@ -79,6 +79,7 @@ const MuseCreaI18n = {
       'nav.history': '历史记录',
       'nav.profile': '个人中心',
       'nav.admin': '管理后台',
+      'nav.backPortfolio': '返回作品集',
       'nav.profileInfo': '个人信息',
       'nav.logout': '退出登录',
       'nav.defaultUser': '用户',
@@ -87,6 +88,17 @@ const MuseCreaI18n = {
       'nav.darkMode': '切换暗色模式',
       'nav.collapseSidebar': '收起侧栏',
       'nav.expandSidebar': '展开侧栏',
+      'nav.articles': '技术文章',
+
+      // ── Articles ──
+      'art.title': '技术文章',
+      'art.desc': '探索文创产品设计、评价方法与行业洞察',
+      'art.comingSoon': '更多文章持续更新中，敬请期待…',
+      'art.readMore': '阅读全文',
+      'art.tag.method': '方法论',
+      'art.tag.case': '案例',
+      'art.tag.insight': '洞察',
+      'art.tag.tutorial': '教程',
 
       // ── Auth ──
       'auth.welcome': '欢迎回来',
@@ -433,6 +445,10 @@ const MuseCreaI18n = {
       'admin.adjustCreditsTitle': '调整积分',
       'admin.invalidNumber': '请输入有效数字',
       'admin.creditsUpdated': '积分已更新',
+      'admin.grantCredits': '发券',
+      'admin.grantCreditsTitle': '发放额度',
+      'admin.enterGrantCount': '请输入发放次数',
+      'admin.grantSuccess': '额度已发放',
       'admin.couponCreated': '券码创建成功',
       'admin.confirmDeleteCoupon': '确定删除此券码？',
       'admin.deleted': '已删除',
@@ -593,6 +609,7 @@ const MuseCreaI18n = {
       'nav.history': 'History',
       'nav.profile': 'Profile',
       'nav.admin': 'Admin',
+      'nav.backPortfolio': 'Portfolio',
       'nav.profileInfo': 'Profile',
       'nav.logout': 'Logout',
       'nav.defaultUser': 'User',
@@ -601,6 +618,17 @@ const MuseCreaI18n = {
       'nav.darkMode': 'Switch to Dark Mode',
       'nav.collapseSidebar': 'Collapse Sidebar',
       'nav.expandSidebar': 'Expand Sidebar',
+      'nav.articles': 'Articles',
+
+      // ── Articles ──
+      'art.title': 'Technical Articles',
+      'art.desc': 'Explore cultural creative product design, evaluation methods, and industry insights',
+      'art.comingSoon': 'More articles coming soon…',
+      'art.readMore': 'Read More',
+      'art.tag.method': 'Method',
+      'art.tag.case': 'Case Study',
+      'art.tag.insight': 'Insight',
+      'art.tag.tutorial': 'Tutorial',
 
       // ── Auth ──
       'auth.welcome': 'Welcome Back',
@@ -947,6 +975,10 @@ const MuseCreaI18n = {
       'admin.adjustCreditsTitle': 'Adjust Credits',
       'admin.invalidNumber': 'Please enter a valid number',
       'admin.creditsUpdated': 'Credits updated',
+      'admin.grantCredits': 'Grant',
+      'admin.grantCreditsTitle': 'Grant Credits',
+      'admin.enterGrantCount': 'Enter number of credits to grant',
+      'admin.grantSuccess': 'Credits granted',
       'admin.couponCreated': 'Coupon created successfully',
       'admin.confirmDeleteCoupon': 'Delete this coupon?',
       'admin.deleted': 'Deleted',

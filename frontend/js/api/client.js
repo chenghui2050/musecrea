@@ -129,6 +129,7 @@ const adminApi = {
   createCoupon: (data) => api.post('/admin/coupons', data),
   getCoupons: (page = 1) => api.get('/admin/coupons', { params: { page } }),
   deleteCoupon: (id) => api.delete(`/admin/coupons/${id}`),
+  grantCredits: (userId, count) => api.post(`/admin/users/${userId}/grant-credits`, null, { params: { count } }),
 };
 
 // Helper: auth state

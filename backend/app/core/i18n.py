@@ -56,6 +56,7 @@ MESSAGES = {
 
     # Admin
     'admin.user_not_found': ('用户不存在', 'User not found'),
+    'admin.invalid_credits': ('发放次数必须大于0', 'Credit count must be greater than 0'),
     'admin.coupon_exists': ('优惠券码已存在', 'Coupon code already exists'),
     'admin.coupon_not_found': ('优惠券不存在', 'Coupon not found'),
     'admin.coupon_deleted': ('优惠券已删除', 'Coupon deleted'),

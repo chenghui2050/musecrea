@@ -49,12 +49,13 @@ const AdminPage = {
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column :label="t('admin.actions')" width="260" fixed="right">
+            <el-table-column :label="t('admin.actions')" width="320" fixed="right">
               <template #default="{ row }">
                 <el-button link size="small" :type="row.is_active ? 'danger' : 'success'" @click="toggleUser(row)">
                   {{ row.is_active ? t('admin.disable') : t('admin.enable') }}
                 </el-button>
                 <el-button link size="small" type="primary" @click="editCredits(row)">{{ t('admin.adjustCredits') }}</el-button>
+                <el-button link size="small" type="success" @click="grantCredits(row)">{{ t('admin.grantCredits') }}</el-button>
                 <el-button link size="small" type="warning" @click="resetPassword(row)">{{ t('admin.resetPwd') }}</el-button>
               </template>
             </el-table-column>
@@ -85,59 +86,8 @@ const AdminPage = {
           </el-table>
         </el-tab-pane>
 
-        <!-- Coupons Tab -->
-        <el-tab-pane :label="t('admin.couponMgmt')" name="coupons">
-          <div style="margin-bottom:16px;display:flex;justify-content:space-between;">
-            <h3 style="font-size:16px">{{ t('admin.couponList') }}</h3>
-            <el-button type="primary" @click="showCouponDialog = true">{{ t('admin.createCoupon') }}</el-button>
-          </div>
-          <el-table :data="coupons" stripe style="width:100%">
-            <el-table-column prop="code" :label="t('admin.couponCode')" width="160" />
-            <el-table-column prop="discount_type" :label="t('admin.type')" width="140" />
-            <el-table-column prop="credits_value" :label="t('admin.creditsValue')" width="90" />
-            <el-table-column :label="t('admin.useCount')" width="100">
-              <template #default="{ row }">{{ row.used_count }} / {{ row.max_uses }}</template>
-            </el-table-column>
-            <el-table-column :label="t('admin.status')" width="110">
-              <template #default="{ row }">
-                <el-tag :type="row.is_active ? 'success' : 'info'" size="small">{{ row.is_active ? t('admin.couponValid') : t('admin.couponUsedUp') }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column :label="t('admin.actions')" width="120">
-              <template #default="{ row }">
-                <el-button link size="small" type="danger" @click="deleteCoupon(row)">{{ t('admin.delete') }}</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </el-tab-pane>
       </el-tabs>
     </div>
-
-    <!-- Create Coupon Dialog -->
-    <el-dialog v-model="showCouponDialog" :title="t('admin.createCouponTitle')" width="450px">
-      <el-form :model="newCoupon" label-width="100px">
-        <el-form-item :label="t('admin.couponCode')">
-          <el-input v-model="newCoupon.code" :placeholder="t('admin.couponCodePlaceholder')" />
-        </el-form-item>
-        <el-form-item :label="t('admin.type')">
-          <el-select v-model="newCoupon.discount_type" style="width:100%">
-            <el-option :label="t('admin.freeEval')" value="free_evaluation" />
-            <el-option :label="t('admin.discountPercent')" value="discount_percent" />
-            <el-option :label="t('admin.freeSubscription')" value="free_subscription" />
-          </el-select>
-        </el-form-item>
-        <el-form-item :label="t('admin.creditsValue')">
-          <el-input-number v-model="newCoupon.credits_value" :min="1" :max="100" />
-        </el-form-item>
-        <el-form-item :label="t('admin.maxUses')">
-          <el-input-number v-model="newCoupon.max_uses" :min="1" :max="1000" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="showCouponDialog = false">{{ t('admin.cancel') }}</el-button>
-        <el-button type="primary" :loading="couponLoading" @click="createCoupon">{{ t('admin.create') }}</el-button>
-      </template>
-    </el-dialog>
   </div>
   `,
   setup() {
@@ -188,6 +138,20 @@ const AdminPage = {
       }).catch(() => {});
     };
 
+    const grantCredits = async (user) => {
+      ElementPlus.ElMessageBox.prompt(t('admin.enterGrantCount'), t('admin.grantCreditsTitle') + ' - ' + user.username, {
+        inputValue: '5',
+        inputPattern: /^[1-9]\d*$/,
+        inputErrorMessage: t('admin.invalidNumber'),
+      }).then(async ({ value }) => {
+        try {
+          const res = await adminApi.grantCredits(user.id, parseInt(value));
+          user.credits = res.credits;
+          ElementPlus.ElMessage.success(t('admin.grantSuccess'));
+        } catch (e) { ElementPlus.ElMessage.error(e.message); }
+      }).catch(() => {});
+    };
+
     const resetPassword = async (user) => {
       ElementPlus.ElMessageBox.prompt(t('admin.enterNewPassword'), t('admin.resetPwdTitle') + ' - ' + user.username, {
         inputValue: 'MuseCrea123',
@@ -223,6 +187,6 @@ const AdminPage = {
       } catch (e) { if (e !== 'cancel') ElementPlus.ElMessage.error(e.message); }
     };
 
-    return { stats, users, logs, coupons, activeTab, showCouponDialog, couponLoading, newCoupon, toggleUser, editCredits, resetPassword, createCoupon, deleteCoupon, t };
+    return { stats, users, logs, coupons, activeTab, showCouponDialog, couponLoading, newCoupon, toggleUser, editCredits, grantCredits, resetPassword, createCoupon, deleteCoupon, t };
   }
 };

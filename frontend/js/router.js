@@ -77,6 +77,7 @@ const router = createRouter({
         { path: 'admin', component: AdminPage, beforeEnter: requireAuth },
         { path: 'profile', component: ProfilePage, beforeEnter: requireAuth },
         { path: 'guide', component: GuidePage, beforeEnter: requireAuth },
+        { path: 'articles', component: ArticlesPage, beforeEnter: requireAuth },
       ]
     },
   ]
